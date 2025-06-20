@@ -44,7 +44,6 @@
 
 			this.type = type;
 			this.avatarId = avatarId;
-			console.log(this.content, this.avatarId);
 		}
 	}
 
@@ -65,8 +64,12 @@
 	const storage = new Storage(client);
 
 	async function submit(event: Event) {
-		if (newMessage.trim() === '') {
+		if (newMessage.trim() == '') {
 			event.preventDefault();
+			return;
+		}
+		if (username == '') {
+			alert('Please enter a username');
 			return;
 		}
 		imageFromInitials(username);
@@ -100,7 +103,6 @@
 			Query.limit(20)
 		]);
 		res.documents.forEach((doc) => {
-			console.log(doc.avatar_id);
 			messages.push(
 				new Message(
 					doc.content,
@@ -161,21 +163,17 @@
 		if (messagesContainer) {
 			const scrollLoc = -messagesContainer.scrollTop + messagesContainer.clientHeight;
 			const difference = Math.abs(scrollLoc - messagesContainer.scrollHeight);
-			console.log(scrollLoc, difference);
 			if (difference < 100) {
 				if (loadingMessages) {
 					return;
 				}
-				console.log('at top');
 				loadingMessages = true;
 				const lastMessage = messages.at(-1);
 				const lastMessageId = lastMessage?.id;
-				console.log(lastMessage);
 				const res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
 					Query.limit(10),
 					lastMessageId ? Query.cursorBefore(lastMessageId) : ''
 				]);
-				console.log(res);
 				if (res.documents.length == 0) {
 					messages.push(
 						new Message('No more messages!', 'SYSTEM', new Date(0), '0', MessageType.System)
@@ -195,7 +193,6 @@
 							)
 					)
 					.reverse();
-				console.log(newMessages);
 				messages = [...messages, ...newMessages];
 				loadingMessages = false;
 			}
@@ -203,18 +200,14 @@
 	}
 
 	async function imageFromInitials(username: string) {
-		console.log(username);
 		const res = avatars.getInitials(username);
-		console.log(res);
 	}
 
 	async function onAvatarUploadStart() {
 		if (avatarFilePicker?.files) {
 			if (avatarFilePicker.files?.length > 0) {
-				console.log(avatarFilePicker?.files);
 				currentAvatarPath = URL.createObjectURL(avatarFilePicker.files[0]);
 				const res = await storage.createFile('profiles', ID.unique(), avatarFilePicker.files[0]);
-				console.log(res);
 				localStorage.setItem('avatarId', res.$id);
 				currentAvatarPath = formatAvatarURI(res.$id);
 				currentAvatarId = res.$id;
