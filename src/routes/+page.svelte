@@ -26,7 +26,7 @@
 		username: string;
 		createdAt: Date;
 		id: string;
-		avatar: string | null = null;
+		avatarId: string | null = null;
 		type: MessageType = MessageType.User;
 
 		constructor(
@@ -34,7 +34,8 @@
 			username: string,
 			createdAt: Date,
 			id: string,
-			type: MessageType = MessageType.User
+			type: MessageType = MessageType.User,
+			avatarId: string | null = null
 		) {
 			this.content = content;
 			this.username = username;
@@ -42,6 +43,8 @@
 			this.id = id;
 
 			this.type = type;
+			this.avatarId = avatarId;
+			console.log(this.content, this.avatarId);
 		}
 	}
 
@@ -52,6 +55,7 @@
 	let avatarFilePicker: HTMLInputElement | null = $state(null);
 	let loadingMessages: boolean = $state(false);
 	let currentAvatarPath: string | null = $state(null);
+	let currentAvatarId: string | null = $state(null);
 
 	const client = new Client()
 		.setEndpoint(env.PUBLIC_APPWRITE_ENDPOINT)
@@ -74,11 +78,19 @@
 			}
 		}, 0);
 
-		const tempMessage = new Message(messageToSend, username, new Date(), '0', MessageType.Temp);
+		const tempMessage = new Message(
+			messageToSend,
+			username,
+			new Date(),
+			'0',
+			MessageType.Temp,
+			currentAvatarId
+		);
 		messages.unshift(tempMessage);
 		await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
 			content: messageToSend,
-			username
+			username,
+			avatar_id: currentAvatarId
 		});
 	}
 
@@ -88,7 +100,17 @@
 			Query.limit(20)
 		]);
 		res.documents.forEach((doc) => {
-			messages.push(new Message(doc.content, doc.username, new Date(doc.$createdAt), doc.$id));
+			console.log(doc.avatar_id);
+			messages.push(
+				new Message(
+					doc.content,
+					doc.username,
+					new Date(doc.$createdAt),
+					doc.$id,
+					MessageType.User,
+					doc.avatar_id
+				)
+			);
 		});
 	}
 
@@ -102,14 +124,21 @@
 		const avatarId = localStorage.getItem('avatarId');
 		if (avatarId != null) {
 			console.log('found avatar at:', avatarId);
-			currentAvatarPath = `https://nyc.cloud.appwrite.io/v1/storage/buckets/profiles/files/${avatarId}/view?project=${env.PUBLIC_APPWRITE_PROJECT_ID}`;
+			currentAvatarPath = formatAvatarURI(avatarId);
+			currentAvatarId = avatarId;
 		}
 	});
 
 	function messageRecieved(response: RealtimeResponseEvent<unknown>) {
 		const res: any = response.payload;
-		let newMessage = new Message(res.content, res.username, new Date(res.$createdAt), res.$id);
-		newMessage.id = res.$id;
+		let newMessage = new Message(
+			res.content,
+			res.username,
+			new Date(res.$createdAt),
+			res.$id,
+			MessageType.User,
+			res.avatar_id
+		);
 		messages.unshift(newMessage);
 
 		const tempIndex = messages.findIndex((mes) => mes.type == MessageType.Temp);
@@ -151,7 +180,17 @@
 					return;
 				}
 				const newMessages = res.documents
-					.map((doc) => new Message(doc.content, doc.username, new Date(doc.$createdAt), doc.$id))
+					.map(
+						(doc) =>
+							new Message(
+								doc.content,
+								doc.username,
+								new Date(doc.$createdAt),
+								doc.$id,
+								MessageType.User,
+								doc.avatar_id
+							)
+					)
 					.reverse();
 				console.log(newMessages);
 				messages = [...messages, ...newMessages];
@@ -174,8 +213,14 @@
 				const res = await storage.createFile('profiles', ID.unique(), avatarFilePicker.files[0]);
 				console.log(res);
 				localStorage.setItem('avatarId', res.$id);
+				currentAvatarPath = formatAvatarURI(res.$id);
+				currentAvatarId = res.$id;
 			}
 		}
+	}
+
+	function formatAvatarURI(id: string): string {
+		return `https://nyc.cloud.appwrite.io/v1/storage/buckets/profiles/files/${id}/view?project=${env.PUBLIC_APPWRITE_PROJECT_ID}`;
 	}
 </script>
 
@@ -190,7 +235,12 @@
 		>
 			{#each messages as message}
 				<div class="flex w-full gap-2 p-2">
-					<img src={avatars.getInitials(message.username)} class="h-8 w-8 rounded-md shadow-md" />
+					<img
+						src={message.avatarId
+							? formatAvatarURI(message.avatarId)
+							: avatars.getInitials(message.username)}
+						class="h-8 w-8 rounded-md object-cover shadow-md"
+					/>
 					<div
 						class="w-full rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
 					>
@@ -220,7 +270,7 @@
 			bind:value={username}
 		/>
 		{#if currentAvatarPath}
-			<img src={currentAvatarPath} class="rounded-md shadow-md" />
+			<img src={currentAvatarPath} class="rounded-md object-cover shadow-md" />
 		{/if}
 		<input
 			type="file"
