@@ -311,7 +311,10 @@
 
 					{#each Array(20) as _}
 						<div class="flex flex-row items-center gap-4">
-							<img src="/assets/chevron_forward.svg" class="size-6" />
+							<img
+								src="/assets/chevron_forward.svg"
+								class="size-6 brightness-0 dark:brightness-100"
+							/>
 							<button
 								class="w-full cursor-pointer rounded-md border-2 border-blue-400 bg-slate-300/10 px-4 py-2 transition hover:border-blue-500 dark:text-white"
 								>Main</button
