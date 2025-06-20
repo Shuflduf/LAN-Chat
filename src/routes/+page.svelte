@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 
-	import { Avatars, Client, Databases, ID, Query, type RealtimeResponseEvent } from 'appwrite';
+	import {
+		Avatars,
+		Client,
+		Databases,
+		ID,
+		Query,
+		Storage,
+		type RealtimeResponseEvent
+	} from 'appwrite';
 	import { onMount } from 'svelte';
 
 	let username = $state('Shuflduf');
@@ -41,13 +49,16 @@
 	let newMessage: string = $state('');
 	let messagesContainer: HTMLDivElement | null = $state(null);
 	let newMessageBox: HTMLInputElement | null = $state(null);
+	let avatarFilePicker: HTMLInputElement | null = $state(null);
 	let loadingMessages: boolean = $state(false);
+	let currentAvatarPath: string | null = $state(null);
 
 	const client = new Client()
 		.setEndpoint(env.PUBLIC_APPWRITE_ENDPOINT)
 		.setProject(env.PUBLIC_APPWRITE_PROJECT_ID);
 	const databases = new Databases(client);
 	const avatars = new Avatars(client);
+	const storage = new Storage(client);
 
 	async function submit(event: Event) {
 		if (newMessage.trim() === '') {
@@ -87,6 +98,12 @@
 			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
 			messageRecieved
 		);
+
+		const avatarId = localStorage.getItem('avatarId');
+		if (avatarId != null) {
+			console.log('found avatar at:', avatarId);
+			currentAvatarPath = `https://nyc.cloud.appwrite.io/v1/storage/buckets/profiles/files/${avatarId}/view?project=${env.PUBLIC_APPWRITE_PROJECT_ID}`;
+		}
 	});
 
 	function messageRecieved(response: RealtimeResponseEvent<unknown>) {
@@ -148,6 +165,18 @@
 		const res = avatars.getInitials(username);
 		console.log(res);
 	}
+
+	async function onAvatarUploadStart() {
+		if (avatarFilePicker?.files) {
+			if (avatarFilePicker.files?.length > 0) {
+				console.log(avatarFilePicker?.files);
+				currentAvatarPath = URL.createObjectURL(avatarFilePicker.files[0]);
+				const res = await storage.createFile('profiles', ID.unique(), avatarFilePicker.files[0]);
+				console.log(res);
+				localStorage.setItem('avatarId', res.$id);
+			}
+		}
+	}
 </script>
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
@@ -183,17 +212,22 @@
 		</form>
 	</div>
 	<section
-		class="flex h-full w-lg flex-col rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
+		class="flex h-full w-lg flex-col gap-4 rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
 	>
 		<input
 			class="focus_shadow-xl rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:outline-none"
 			placeholder="Username"
 			bind:value={username}
 		/>
+		{#if currentAvatarPath}
+			<img src={currentAvatarPath} class="rounded-md shadow-md" />
+		{/if}
 		<input
 			type="file"
-			class="mt-4 cursor-pointer rounded-md bg-blue-400 p-4 shadow-md transition hover:bg-blue-500"
+			class="cursor-pointer rounded-md bg-blue-400 p-4 shadow-md transition hover:bg-blue-500"
 			accept="image/png, image/jpeg, image/webp"
+			onchange={onAvatarUploadStart}
+			bind:this={avatarFilePicker}
 		/>
 	</section>
 </main>
