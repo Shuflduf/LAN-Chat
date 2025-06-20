@@ -21,6 +21,21 @@
 		Temp
 	}
 
+	class MessageGroup {
+		messages: Message[];
+		username: string;
+		avatarId: string;
+		createdAt: Date;
+
+		constructor(messages: Message[], username: string, avatarId: string, createdAt: Date) {
+			this.messages = messages;
+			this.username = username;
+			this.avatarId = avatarId;
+			this.createdAt = createdAt;
+		}
+	}
+
+	// TODO: eventually add like ip or hashed ip in case multiple people have same name
 	class Message {
 		content: string;
 		username: string;
@@ -56,6 +71,8 @@
 	let currentAvatarPath: string | null = $state(null);
 	let currentAvatarId: string | null = $state(null);
 	let sidebarShown: boolean = $state(true);
+
+	let messageGroups: any[] = $derived(groupsFromMessages(messages));
 
 	const client = new Client()
 		.setEndpoint(env.PUBLIC_APPWRITE_ENDPOINT)
@@ -227,6 +244,39 @@
 	function toggleSidebar() {
 		sidebarShown = !sidebarShown;
 	}
+
+	function groupsFromMessages(tmpMessages: Message[]): MessageGroup[] {
+		let groups: MessageGroup[] = [];
+		let currentGroup: Message[] = [];
+		for (let index = 0; index < tmpMessages.length; index++) {
+			const mes = tmpMessages[index];
+			if (currentGroup.length == 0) {
+				currentGroup.push(mes);
+				continue;
+			}
+			const tmpLatest = currentGroup.at(-1);
+			const tmpAvatarId = tmpLatest?.avatarId;
+			const tmpUsername = tmpLatest?.username;
+			const tmpCreatedAt = tmpLatest?.createdAt;
+
+			const sameUsername = mes.username == tmpUsername;
+			if (mes.avatarId == tmpAvatarId && mes.username == tmpUsername) {
+				currentGroup.push(mes);
+			} else {
+				const newMessageGroup = new MessageGroup(
+					currentGroup,
+					tmpUsername,
+					tmpAvatarId,
+					tmpCreatedAt
+				);
+				groups.push(newMessageGroup);
+				currentGroup = [];
+				currentGroup.push(mes);
+			}
+		}
+		console.log('out:', groups);
+		return groups;
+	}
 </script>
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
@@ -238,23 +288,34 @@
 			onscroll={onMessagesScrolled}
 			bind:this={messagesContainer}
 		>
-			{#each messages as message}
+			<!-- {#each messageGroups as group} -->
+			<!-- 	{#each group.messages as mes} -->
+			<!-- 		<p>{mes.content}</p> -->
+			<!-- 	{/each} -->
+			<!-- 	<h1>{group.username}</h1> -->
+			<!-- {/each} -->
+
+			{#each messageGroups as group}
 				<div class="flex w-full gap-2 p-2">
 					<img
-						src={message.avatarId
-							? formatAvatarURI(message.avatarId)
-							: avatars.getInitials(message.username)}
+						src={group.avatarId
+							? formatAvatarURI(group.avatarId)
+							: avatars.getInitials(group.username)}
 						class="h-8 w-8 rounded-md object-cover shadow-md"
+						title={group.avatarId}
+						alt="avatar of {group.username}"
 					/>
 					<div
 						class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
 					>
-						<p class="text-xs text-gray-400" title={message.createdAt.toString()}>
-							{message.username} - {formatDate(message.createdAt)}
+						<p class="text-xs text-gray-400" title={group.createdAt.toString()}>
+							{group.username} - {formatDate(group.createdAt)}
 						</p>
-						<p class="{message.type == MessageType.Temp ? 'text-gray-400' : ''} dark:text-white">
-							{message.content}
-						</p>
+						{#each group.messages.reverse() as message}
+							<p class="{message.type == MessageType.Temp ? 'text-gray-400' : ''} dark:text-white">
+								{message.content}
+							</p>
+						{/each}
 					</div>
 				</div>
 			{/each}
