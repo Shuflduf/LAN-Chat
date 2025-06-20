@@ -12,7 +12,7 @@
 	} from 'appwrite';
 	import { onMount } from 'svelte';
 
-	let username = $state('Shuflduf');
+	let username = $state('');
 
 	enum MessageType {
 		User,
