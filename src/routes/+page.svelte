@@ -123,9 +123,12 @@
 
 		const avatarId = localStorage.getItem('avatarId');
 		if (avatarId != null) {
-			console.log('found avatar at:', avatarId);
 			currentAvatarPath = formatAvatarURI(avatarId);
 			currentAvatarId = avatarId;
+		}
+		const savedUsername = localStorage.getItem('username');
+		if (savedUsername != null) {
+			username = savedUsername;
 		}
 	});
 
@@ -222,6 +225,10 @@
 	function formatAvatarURI(id: string): string {
 		return `https://nyc.cloud.appwrite.io/v1/storage/buckets/profiles/files/${id}/view?project=${env.PUBLIC_APPWRITE_PROJECT_ID}`;
 	}
+
+	function onUsernameChanged() {
+		localStorage.setItem('username', username);
+	}
 </script>
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
@@ -268,6 +275,7 @@
 			class="focus_shadow-xl rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:outline-none"
 			placeholder="Username"
 			bind:value={username}
+			onchange={onUsernameChanged}
 		/>
 		{#if currentAvatarPath}
 			<img src={currentAvatarPath} class="rounded-md object-cover shadow-md" />
