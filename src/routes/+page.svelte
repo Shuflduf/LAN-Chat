@@ -4,8 +4,9 @@
 	import { Client, Databases, ID, Query, type RealtimeResponseEvent } from 'appwrite';
 	import { onMount } from 'svelte';
 
-	const username = 'Shuflduf';
+	let username = $state('Shuflduf');
 
+	// idk how to ignore error BUT THIS WORKS FINE
 	enum MessageType {
 		User,
 		System,
@@ -63,7 +64,7 @@
 		messages.unshift(tempMessage);
 		await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
 			content: messageToSend,
-			username: 'Shuflduf'
+			username
 		});
 	}
 
@@ -153,7 +154,7 @@
 				<div
 					class="m-2 rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
 				>
-					<p class="text-xs text-gray-400">
+					<p class="text-xs text-gray-400" title={message.createdAt.toString()}>
 						{message.username} - {formatDate(message.createdAt)}
 					</p>
 					<p class={message.type == MessageType.Temp ? 'text-gray-400' : ''}>{message.content}</p>
@@ -162,11 +163,20 @@
 		</div>
 		<form class="w-full p-4" onsubmit={submit}>
 			<input
-				class="w-full rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md ring-0 transition focus:shadow-xl focus:outline-none"
+				class="w-full rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:shadow-xl focus:outline-none"
 				placeholder="Send Message"
 				bind:value={newMessage}
 				bind:this={newMessageBox}
 			/>
 		</form>
 	</div>
+	<section
+		class="flex h-full w-lg flex-col rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
+	>
+		<input
+			class="focus_shadow-xl rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:outline-none"
+			placeholder="Username"
+			bind:value={username}
+		/>
+	</section>
 </main>
