@@ -231,7 +231,7 @@
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
 	<div
-		class="flex w-full max-w-4xl flex-col rounded-md border border-stone-500 bg-stone-100/10 shadow-md backdrop-blur-xs"
+		class="flex w-full max-w-4xl flex-col rounded-md border border-stone-500 bg-stone-300/10 shadow-md backdrop-blur-xs"
 	>
 		<div
 			class="flex flex-col-reverse overflow-y-auto p-2"
@@ -247,7 +247,7 @@
 						class="h-8 w-8 rounded-md object-cover shadow-md"
 					/>
 					<div
-						class="w-full rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
+						class="w-full rounded-md border border-stone-500 bg-stone-300/10 p-4 shadow-md backdrop-blur-xs"
 					>
 						<p class="text-xs text-gray-400" title={message.createdAt.toString()}>
 							{message.username} - {formatDate(message.createdAt)}
@@ -259,7 +259,7 @@
 		</div>
 		<form class="w-full p-4" onsubmit={submit}>
 			<input
-				class="w-full rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:shadow-xl focus:outline-none"
+				class="w-full rounded-md border border-stone-500 bg-stone-300/10 p-4 shadow-md transition focus:shadow-xl focus:outline-none"
 				placeholder="Send Message"
 				bind:value={newMessage}
 				bind:this={newMessageBox}
@@ -268,7 +268,7 @@
 	</div>
 	{#if sidebarShown}
 		<section
-			class="flex h-full w-lg flex-col gap-4 rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
+			class="flex h-full w-lg flex-col gap-4 rounded-md border border-stone-500 bg-stone-300/10 p-4 shadow-md backdrop-blur-xs"
 		>
 			<button
 				class="flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
@@ -277,7 +277,7 @@
 				<img src="/assets/chevron_forward.svg" />
 			</button>
 			<input
-				class="focus_shadow-xl rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:outline-none"
+				class="focus_shadow-xl rounded-md border border-stone-500 bg-stone-300/10 p-4 shadow-md transition focus:outline-none"
 				placeholder="Username"
 				bind:value={username}
 				onchange={onUsernameChanged}

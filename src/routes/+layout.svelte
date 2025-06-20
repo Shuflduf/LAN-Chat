@@ -5,4 +5,4 @@
 </script>
 
 {@render children()}
-<div class="pointer-events-none fixed z-[100] h-screen w-screen"></div>
+<!-- <div class="pointer-events-none fixed z-40 h-screen w-screen backdrop-invert"></div> -->
