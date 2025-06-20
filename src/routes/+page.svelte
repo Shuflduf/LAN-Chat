@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 
-	import { Client, Databases, ID, Query, type RealtimeResponseEvent } from 'appwrite';
+	import { Avatars, Client, Databases, ID, Query, type RealtimeResponseEvent } from 'appwrite';
 	import { onMount } from 'svelte';
 
 	let username = $state('Shuflduf');
@@ -18,6 +18,7 @@
 		username: string;
 		createdAt: Date;
 		id: string;
+		avatar: string | null = null;
 		type: MessageType = MessageType.User;
 
 		constructor(
@@ -46,12 +47,14 @@
 		.setEndpoint(env.PUBLIC_APPWRITE_ENDPOINT)
 		.setProject(env.PUBLIC_APPWRITE_PROJECT_ID);
 	const databases = new Databases(client);
+	const avatars = new Avatars(client);
 
 	async function submit(event: Event) {
 		if (newMessage.trim() === '') {
 			event.preventDefault();
 			return;
 		}
+		imageFromInitials(username);
 		let messageToSend = newMessage;
 		newMessage = '';
 		setTimeout(() => {
@@ -139,6 +142,12 @@
 			}
 		}
 	}
+
+	async function imageFromInitials(username: string) {
+		console.log(username);
+		const res = avatars.getInitials(username);
+		console.log(res);
+	}
 </script>
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
@@ -151,13 +160,16 @@
 			bind:this={messagesContainer}
 		>
 			{#each messages as message}
-				<div
-					class="m-2 rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
-				>
-					<p class="text-xs text-gray-400" title={message.createdAt.toString()}>
-						{message.username} - {formatDate(message.createdAt)}
-					</p>
-					<p class={message.type == MessageType.Temp ? 'text-gray-400' : ''}>{message.content}</p>
+				<div class="flex w-full gap-2 p-2">
+					<img src={avatars.getInitials(message.username)} class="h-8 w-8 rounded-md shadow-md" />
+					<div
+						class="w-full rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
+					>
+						<p class="text-xs text-gray-400" title={message.createdAt.toString()}>
+							{message.username} - {formatDate(message.createdAt)}
+						</p>
+						<p class={message.type == MessageType.Temp ? 'text-gray-400' : ''}>{message.content}</p>
+					</div>
 				</div>
 			{/each}
 		</div>
@@ -177,6 +189,11 @@
 			class="focus_shadow-xl rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:outline-none"
 			placeholder="Username"
 			bind:value={username}
+		/>
+		<input
+			type="file"
+			class="mt-4 cursor-pointer rounded-md bg-blue-400 p-4 shadow-md transition hover:bg-blue-500"
+			accept="image/png, image/jpeg, image/webp"
 		/>
 	</section>
 </main>
