@@ -55,6 +55,7 @@
 	let loadingMessages: boolean = $state(false);
 	let currentAvatarPath: string | null = $state(null);
 	let currentAvatarId: string | null = $state(null);
+	let sidebarShown: boolean = $state(true);
 
 	const client = new Client()
 		.setEndpoint(env.PUBLIC_APPWRITE_ENDPOINT)
@@ -222,6 +223,10 @@
 	function onUsernameChanged() {
 		localStorage.setItem('username', username);
 	}
+
+	function toggleSidebar() {
+		sidebarShown = !sidebarShown;
+	}
 </script>
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
@@ -261,24 +266,39 @@
 			/>
 		</form>
 	</div>
-	<section
-		class="flex h-full w-lg flex-col gap-4 rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
-	>
-		<input
-			class="focus_shadow-xl rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:outline-none"
-			placeholder="Username"
-			bind:value={username}
-			onchange={onUsernameChanged}
-		/>
-		{#if currentAvatarPath}
-			<img src={currentAvatarPath} class="rounded-md object-cover shadow-md" />
-		{/if}
-		<input
-			type="file"
-			class="cursor-pointer rounded-md bg-blue-400 p-4 shadow-md transition hover:bg-blue-500"
-			accept="image/png, image/jpeg, image/webp"
-			onchange={onAvatarUploadStart}
-			bind:this={avatarFilePicker}
-		/>
-	</section>
+	{#if sidebarShown}
+		<section
+			class="flex h-full w-lg flex-col gap-4 rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
+		>
+			<button
+				class="flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
+				onclick={toggleSidebar}
+				><p>Hide Sidebar</p>
+				<img src="/assets/chevron_forward.svg" />
+			</button>
+			<input
+				class="focus_shadow-xl rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md transition focus:outline-none"
+				placeholder="Username"
+				bind:value={username}
+				onchange={onUsernameChanged}
+			/>
+			{#if currentAvatarPath}
+				<img src={currentAvatarPath} class="rounded-md object-cover shadow-md" />
+			{/if}
+			<input
+				type="file"
+				class="cursor-pointer rounded-md bg-blue-400 p-4 shadow-md transition hover:bg-blue-500"
+				accept="image/png, image/jpeg, image/webp"
+				onchange={onAvatarUploadStart}
+				bind:this={avatarFilePicker}
+			/>
+		</section>
+	{:else}
+		<button
+			class="fixed top-8 right-8 flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
+			onclick={toggleSidebar}
+		>
+			<img src="/assets/chevron_forward.svg" class="rotate-180" />
+		</button>
+	{/if}
 </main>
