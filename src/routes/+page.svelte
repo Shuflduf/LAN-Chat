@@ -240,6 +240,9 @@
 	}
 
 	function groupsFromMessages(tmpMessages: Message[]): MessageGroup[] {
+		if (tmpMessages.length == 0) {
+			return [];
+		}
 		let groups: MessageGroup[] = [];
 		let currentGroup: Message[] = [];
 		for (let index = 0; index < tmpMessages.length; index++) {
@@ -270,6 +273,14 @@
 				currentGroup.push(mes);
 			}
 		}
+		groups.push(
+			new MessageGroup(
+				currentGroup,
+				currentGroup[0].username,
+				currentGroup[0].avatarId,
+				currentGroup[0].createdAt
+			)
+		);
 		console.log('out:', groups);
 		return groups;
 	}
