@@ -278,25 +278,31 @@
 				><p>Hide Sidebar</p>
 				<img src="/assets/chevron_forward.svg" />
 			</button>
-			<input
-				class="focus_shadow-xl rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
-				placeholder="Username"
-				bind:value={username}
-				onchange={onUsernameChanged}
-			/>
-			{#if currentAvatarPath}
-				<img
-					src={currentAvatarPath}
-					class="rounded-md border border-slate-500 object-cover shadow-md"
+			<div
+				class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
+			>
+				<h1 class="text-center text-2xl dark:text-white">Profile Customization</h1>
+				<!-- TODO: add toggle thing -->
+				<input
+					class="focus_shadow-xl rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
+					placeholder="Username"
+					bind:value={username}
+					onchange={onUsernameChanged}
 				/>
-			{/if}
-			<input
-				type="file"
-				class="cursor-pointer rounded-md bg-blue-400 p-4 text-white shadow-md transition hover:bg-blue-500"
-				accept="image/png, image/jpeg, image/webp"
-				onchange={onAvatarUploadStart}
-				bind:this={avatarFilePicker}
-			/>
+				{#if currentAvatarPath}
+					<img
+						src={currentAvatarPath}
+						class="rounded-md border border-slate-500 object-cover shadow-md"
+					/>
+				{/if}
+				<input
+					type="file"
+					class="cursor-pointer rounded-md bg-blue-400 p-4 text-white shadow-md transition hover:bg-blue-500"
+					accept="image/png, image/jpeg, image/webp"
+					onchange={onAvatarUploadStart}
+					bind:this={avatarFilePicker}
+				/>
+			</div>
 		</section>
 	{:else}
 		<button
