@@ -278,30 +278,47 @@
 				><p>Hide Sidebar</p>
 				<img src="/assets/chevron_forward.svg" />
 			</button>
-			<div
-				class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
-			>
-				<h1 class="text-center text-2xl dark:text-white">Profile Customization</h1>
-				<!-- TODO: add toggle thing -->
-				<input
-					class="focus_shadow-xl rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
-					placeholder="Username"
-					bind:value={username}
-					onchange={onUsernameChanged}
-				/>
-				{#if currentAvatarPath}
-					<img
-						src={currentAvatarPath}
-						class="rounded-md border border-slate-500 object-cover shadow-md"
+			<div class="flex flex-col gap-4 overflow-y-auto">
+				<div
+					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
+				>
+					<h1 class="text-center text-2xl dark:text-white">Profile Customization</h1>
+					<!-- TODO: add toggle thing -->
+					<input
+						class="focus_shadow-xl rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
+						placeholder="Username"
+						bind:value={username}
+						onchange={onUsernameChanged}
 					/>
-				{/if}
-				<input
-					type="file"
-					class="cursor-pointer rounded-md bg-blue-400 p-4 text-white shadow-md transition hover:bg-blue-500"
-					accept="image/png, image/jpeg, image/webp"
-					onchange={onAvatarUploadStart}
-					bind:this={avatarFilePicker}
-				/>
+					{#if currentAvatarPath}
+						<img
+							src={currentAvatarPath}
+							class="rounded-md border border-slate-500 object-cover shadow-md"
+						/>
+					{/if}
+					<input
+						type="file"
+						class="cursor-pointer rounded-md bg-blue-400 p-4 text-white shadow-md transition hover:bg-blue-500"
+						accept="image/png, image/jpeg, image/webp"
+						onchange={onAvatarUploadStart}
+						bind:this={avatarFilePicker}
+					/>
+				</div>
+				<div
+					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
+				>
+					<h1 class="text-center text-2xl dark:text-white">Channels</h1>
+
+					{#each Array(20) as _}
+						<div class="flex flex-row items-center gap-4">
+							<img src="/assets/chevron_forward.svg" class="size-6" />
+							<button
+								class="w-full cursor-pointer rounded-md border-2 border-blue-400 bg-slate-300/10 px-4 py-2 transition hover:border-blue-500 dark:text-white"
+								>Main</button
+							>
+						</div>
+					{/each}
+				</div>
 			</div>
 		</section>
 	{:else}
