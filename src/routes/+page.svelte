@@ -14,7 +14,6 @@
 
 	let username = $state('Shuflduf');
 
-	// idk how to ignore error BUT THIS WORKS FINE
 	enum MessageType {
 		User,
 		System,
@@ -24,10 +23,10 @@
 	class MessageGroup {
 		messages: Message[];
 		username: string;
-		avatarId: string;
+		avatarId: string | null;
 		createdAt: Date;
 
-		constructor(messages: Message[], username: string, avatarId: string, createdAt: Date) {
+		constructor(messages: Message[], username: string, avatarId: string | null, createdAt: Date) {
 			this.messages = messages;
 			this.username = username;
 			this.avatarId = avatarId;
@@ -90,7 +89,6 @@
 			alert('Please enter a username');
 			return;
 		}
-		imageFromInitials(username);
 		let messageToSend = newMessage;
 		newMessage = '';
 		setTimeout(() => {
@@ -217,10 +215,6 @@
 		}
 	}
 
-	async function imageFromInitials(username: string) {
-		const res = avatars.getInitials(username);
-	}
-
 	async function onAvatarUploadStart() {
 		if (avatarFilePicker?.files) {
 			if (avatarFilePicker.files?.length > 0) {
@@ -255,11 +249,13 @@
 				continue;
 			}
 			const tmpLatest = currentGroup.at(-1);
-			const tmpAvatarId = tmpLatest?.avatarId;
-			const tmpUsername = tmpLatest?.username;
-			const tmpCreatedAt = tmpLatest?.createdAt;
+			if (!tmpLatest) {
+				continue;
+			}
+			const tmpAvatarId = tmpLatest.avatarId;
+			const tmpUsername = tmpLatest.username;
+			const tmpCreatedAt = tmpLatest.createdAt;
 
-			const sameUsername = mes.username == tmpUsername;
 			if (mes.avatarId == tmpAvatarId && mes.username == tmpUsername) {
 				currentGroup.push(mes);
 			} else {
@@ -276,6 +272,12 @@
 		}
 		console.log('out:', groups);
 		return groups;
+	}
+
+	function removeAvatar() {
+		localStorage.removeItem('avatarId');
+		currentAvatarId = null;
+		currentAvatarPath = null;
 	}
 </script>
 
@@ -337,7 +339,7 @@
 				class="flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
 				onclick={toggleSidebar}
 				><p>Hide Sidebar</p>
-				<img src="/assets/chevron_forward.svg" />
+				<img src="/assets/chevron_forward.svg" alt="chevron" />
 			</button>
 			<div class="flex flex-col gap-4 overflow-y-auto">
 				<div
@@ -355,26 +357,40 @@
 						<img
 							src={currentAvatarPath}
 							class="rounded-md border border-slate-500 object-cover shadow-md"
+							alt="current avatar"
 						/>
 					{/if}
-					<input
-						type="file"
-						class="cursor-pointer rounded-md bg-blue-400 p-4 text-white shadow-md transition hover:bg-blue-500"
-						accept="image/png, image/jpeg, image/webp"
-						onchange={onAvatarUploadStart}
-						bind:this={avatarFilePicker}
-					/>
+					<div class="flex flex-row gap-4">
+						<button
+							class="w-full cursor-pointer rounded-md bg-blue-400 p-4 text-white shadow-md transition hover:bg-blue-500"
+							onclick={avatarFilePicker?.click()}>Upload Avatar</button
+						>
+						<input
+							type="file"
+							class="hidden"
+							accept="image/png, image/jpeg, image/webp"
+							onchange={onAvatarUploadStart}
+							bind:this={avatarFilePicker}
+						/>
+						{#if currentAvatarId}
+							<button
+								class="cursor-pointer rounded-md bg-red-500 p-4 text-white shadow-md transition hover:bg-red-600"
+								onclick={removeAvatar}>Remove</button
+							>
+						{/if}
+					</div>
 				</div>
 				<div
 					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
 				>
 					<h1 class="text-center text-2xl dark:text-white">Channels</h1>
 
-					{#each Array(20) as _}
+					{#each Array(20)}
 						<div class="flex flex-row items-center gap-4">
 							<img
 								src="/assets/chevron_forward.svg"
 								class="size-6 brightness-0 dark:brightness-100"
+								alt="chevron"
 							/>
 							<button
 								class="w-full cursor-pointer rounded-md border-2 border-blue-400 bg-slate-300/10 px-4 py-2 transition hover:border-blue-500 dark:text-white"
