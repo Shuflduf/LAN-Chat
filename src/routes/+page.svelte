@@ -36,15 +36,16 @@
 			event.preventDefault();
 			return;
 		}
+		let messageToSend = newMessage;
+		newMessage = '';
 
-		const tempMessage = new Message(newMessage, username, new Date(), true);
+		const tempMessage = new Message(messageToSend, username, new Date(), true);
 		tempMessage.id = '0';
 		messages.unshift(tempMessage);
-		const res = await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
-			content: newMessage,
+		await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
+			content: messageToSend,
 			username: 'Shuflduf'
 		});
-		newMessage = '';
 	}
 
 	async function getLatestMessages() {
@@ -85,20 +86,24 @@
 </script>
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
-	<div class="flex w-full max-w-4xl flex-col rounded-md bg-blue-500">
+	<div
+		class="flex w-full max-w-4xl flex-col rounded-md border border-stone-500 bg-stone-100/10 shadow-md backdrop-blur-xs"
+	>
 		<div class="flex flex-col-reverse overflow-y-auto p-2">
 			{#each messages as message}
-				<div class="m-2 rounded-md bg-green-500 p-4">
-					<p class="text-gray-500">
+				<div
+					class="m-2 rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md backdrop-blur-xs"
+				>
+					<p class="text-xs text-gray-400">
 						{message.username} - {formatDate(message.createdAt)}
 					</p>
-					<p class={message.temp ? 'text-gray-600' : ''}>{message.content}</p>
+					<p class={message.temp ? 'text-gray-400' : ''}>{message.content}</p>
 				</div>
 			{/each}
 		</div>
 		<form class="w-full p-4" onsubmit={submit}>
 			<input
-				class="w-full rounded-md bg-yellow-500 p-4"
+				class="w-full rounded-md border border-stone-500 bg-stone-100/10 p-4 shadow-md ring-0 transition focus:shadow-xl focus:outline-none"
 				placeholder="Send Message"
 				bind:value={newMessage}
 			/>
