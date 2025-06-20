@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 
-	import { Client, Databases, ID, Query } from 'appwrite';
+	import { Client, Databases, ID, Query, type RealtimeResponseEvent } from 'appwrite';
 	import { onMount } from 'svelte';
 
 	const username = 'Shuflduf';
@@ -37,14 +37,14 @@
 			return;
 		}
 
-		messages.unshift(new Message(newMessage, username, new Date(), true));
+		const tempMessage = new Message(newMessage, username, new Date(), true);
+		tempMessage.id = '0';
+		messages.unshift(tempMessage);
 		const res = await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
 			content: newMessage,
 			username: 'Shuflduf'
 		});
-
 		newMessage = '';
-		console.log(res);
 	}
 
 	async function getLatestMessages() {
@@ -60,16 +60,27 @@
 		await getLatestMessages();
 		client.subscribe(
 			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
-			(response) => {
-				console.log(response.payload);
-				const res: Message = response.payload as Message;
-				messages.unshift(res);
-			}
+			messageRecieved
 		);
 	});
 
+	function messageRecieved(response: RealtimeResponseEvent<unknown>) {
+		const res: any = response.payload;
+		let newMessage = new Message(res.content, res.username, new Date(res.$createdAt));
+		newMessage.id = res.$id;
+		messages.unshift(newMessage);
+
+		const tempIndex = messages.findIndex((mes) => mes.id == '0');
+		messages.splice(tempIndex, 1);
+	}
+
 	function formatDate(date: Date): string {
-		return `${date.getHours() % 12}:${date.getMinutes()}`;
+		const hours = date.getHours();
+		const hour12 = hours % 12 || 12;
+		const minutes = date.getMinutes().toString().padStart(2, '0');
+		const ampm = hours < 12 ? 'AM' : 'PM';
+
+		return `${hour12}:${minutes} ${ampm}`;
 	}
 </script>
 
@@ -81,7 +92,7 @@
 					<p class="text-gray-500">
 						{message.username} - {formatDate(message.createdAt)}
 					</p>
-					<p>{message.content}</p>
+					<p class={message.temp ? 'text-gray-600' : ''}>{message.content}</p>
 				</div>
 			{/each}
 		</div>
