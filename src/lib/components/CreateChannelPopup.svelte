@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Models } from 'appwrite';
 	import Popup from './Popup.svelte';
 
 	let channelCreationName: string = $state('');
@@ -16,8 +17,6 @@
 			alert('Please provide an expiration date');
 			return;
 		}
-
-		// createChannelPopupShown = false;
 
 		const min = 1000 * 60;
 		const hour = min * 60;
@@ -50,9 +49,10 @@
 				password: channelCreationPassword,
 			}),
 		});
+		const doc: Models.Document = JSON.parse(await res.text());
 		// allChannels = [];
 		// await getAllChannels();
-		onChannelCreate();
+		onChannelCreate(doc, channelCreationPassword);
 	}
 </script>
 

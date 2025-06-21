@@ -8,7 +8,6 @@
 		Client,
 		Databases,
 		ID,
-		Query,
 		Storage,
 		type Models,
 		type RealtimeResponseEvent,
@@ -16,6 +15,8 @@
 	import { onMount } from 'svelte';
 	import CreateChannelPopup from '$lib/components/CreateChannelPopup.svelte';
 	import SmallPopup from '$lib/components/SmallPopup.svelte';
+	import { fly, slide } from 'svelte/transition';
+	import { quadOut } from 'svelte/easing';
 
 	let username = $state('');
 
@@ -92,7 +93,6 @@
 	let messagesContainer: HTMLDivElement | null = $state(null);
 	let newMessageBox: HTMLInputElement | null = $state(null);
 	let avatarFilePicker: HTMLInputElement | null = $state(null);
-	let passwordPrompt: HTMLDivElement | null = $state(null);
 
 	let messages: Message[] = $state([]);
 	let newMessage: string = $state('');
@@ -107,6 +107,8 @@
 	let listChannelsPopupShown: boolean = $state(false);
 	let passwordPromptShown: boolean = $state(false);
 	let promptPass: string = $state('');
+	let profileCustomizationOpen: boolean = $state(true);
+	let channelsMenuOpen: boolean = $state(true);
 
 	let messageGroups: any[] = $derived(groupsFromMessages(messages));
 
@@ -123,7 +125,7 @@
 		return channel;
 	}
 
-	async function refreshChat(password: string | null = null) {
+	async function refreshChat() {
 		await new Promise((r) => setTimeout(r, 100));
 		const c = page.url.searchParams.get('c');
 		const id = c ? c : env.PUBLIC_MAIN_CHANNEL_ID;
@@ -422,10 +424,13 @@
 	// 	document.documentElement.classList.toggle('dark');
 	// }
 
-	async function onChannelCreate() {
+	async function onChannelCreate(doc: Models.Document, pass: string) {
 		createChannelPopupShown = false;
 		allChannels = [];
 		await getAllChannels();
+		const channel = new Channel(doc.$id, doc.name, doc.expiration, doc.password, pass);
+		savedChannels.push(channel);
+		saveSavedChannels();
 	}
 
 	function onCreateChannelOpen() {
@@ -520,7 +525,7 @@
 		<div class="flex flex-row flex-wrap gap-4">
 			{#each sortedChannels() as channel}
 				<button
-					class="rounded-md border bg-slate-300/10 px-4 py-2 shadow-md dark:text-white {savedChannels
+					class="cursor-pointer rounded-md border bg-slate-300/10 px-4 py-2 shadow-md transition dark:text-white {savedChannels
 						.map((c) => c.id)
 						.includes(channel.id)
 						? 'border-blue-500'
@@ -561,7 +566,10 @@
 						title={group.avatarId}
 						alt="avatar of {group.username}" />
 					<div
-						class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
+						class="w-full rounded-md border bg-slate-300/10 p-4 shadow-md backdrop-blur-xs {group
+							.messages[0].type == MessageType.System
+							? 'border-red-500'
+							: 'border-slate-500 '}">
 						<p class="text-xs text-gray-400" title={group.createdAt.toString()}>
 							<span>{group.username}</span>
 							<span>&nbsp;-&nbsp;</span>
@@ -588,6 +596,7 @@
 	</div>
 	{#if sidebarShown}
 		<section
+			transition:fly={{ duration: 200, x: 100, easing: quadOut }}
 			class="flex h-full w-lg flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
 			<div class="flex w-full flex-row justify-end gap-4">
 				<!-- <button -->
@@ -604,63 +613,81 @@
 			<div class="flex flex-col gap-4 overflow-y-auto">
 				<div
 					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
-					<h1 class="text-center text-2xl dark:text-white">Profile Customization</h1>
+					<button
+						onclick={() => (profileCustomizationOpen = !profileCustomizationOpen)}
+						class="flex w-full cursor-pointer flex-row items-center justify-between">
+						<h1 class="text-2xl dark:text-white">Profile</h1>
+						<img src="/assets/chevron_forward.svg" alt="open menu" />
+					</button>
 					<!-- TODO: add toggle thing -->
-					<input
-						class="focus_shadow-xl rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
-						placeholder="Username"
-						bind:value={username}
-						onchange={onUsernameChanged} />
-					{#if currentAvatarPath}
-						<img
-							src={currentAvatarPath}
-							class="rounded-md border border-slate-500 object-cover shadow-md"
-							alt="current avatar"
-							title={currentAvatarId} />
+					{#if profileCustomizationOpen}
+						<div class="flex flex-col gap-4" transition:slide={{ axis: 'y', duration: 200 }}>
+							<input
+								class="focus_shadow-xl rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
+								placeholder="Username"
+								bind:value={username}
+								onchange={onUsernameChanged} />
+							{#if currentAvatarPath}
+								<img
+									src={currentAvatarPath}
+									class="rounded-md border border-slate-500 object-cover shadow-md"
+									alt="current avatar"
+									title={currentAvatarId} />
+							{/if}
+							<div class="flex flex-row gap-4">
+								<button
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
+									onclick={() => avatarFilePicker?.click()}>Upload Avatar</button>
+								<input
+									type="file"
+									class="hidden"
+									accept="image/png, image/jpeg, image/webp"
+									onchange={onAvatarUploadStart}
+									bind:this={avatarFilePicker} />
+								{#if currentAvatarId}
+									<button
+										class="cursor-pointer rounded-md bg-red-500 px-4 py-2 text-white shadow-md transition hover:bg-red-600"
+										onclick={removeAvatar}>Remove</button>
+								{/if}
+							</div>
+						</div>
 					{/if}
-					<div class="flex flex-row gap-4">
-						<button
-							class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
-							onclick={() => avatarFilePicker?.click()}>Upload Avatar</button>
-						<input
-							type="file"
-							class="hidden"
-							accept="image/png, image/jpeg, image/webp"
-							onchange={onAvatarUploadStart}
-							bind:this={avatarFilePicker} />
-						{#if currentAvatarId}
-							<button
-								class="cursor-pointer rounded-md bg-red-500 px-4 py-2 text-white shadow-md transition hover:bg-red-600"
-								onclick={removeAvatar}>Remove</button>
-						{/if}
-					</div>
 				</div>
 				<div
 					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
-					<h1 class="text-center text-2xl dark:text-white">Channels</h1>
+					<button
+						onclick={() => (channelsMenuOpen = !channelsMenuOpen)}
+						class="flex w-full cursor-pointer flex-row items-center justify-between">
+						<h1 class="text-2xl dark:text-white">Channels</h1>
+						<img src="/assets/chevron_forward.svg" alt="open menu" />
+					</button>
 
-					{#each savedChannels as channel}
-						<div class="flex flex-row items-center gap-4">
-							<img
-								src="/assets/chevron_forward.svg"
-								class="size-6 brightness-0 dark:brightness-100"
-								alt="chevron" />
-							<a
-								class="w-full cursor-pointer rounded-md {channel.id == currentChannelId
-									? 'border border-blue-400 hover:border-blue-500'
-									: ''} hover: bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
-								onclick={() => refreshChat(channel.password)}
-								href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a>
+					{#if channelsMenuOpen}
+						<div class="flex flex-col gap-4" transition:slide={{ axis: 'y', duration: 200 }}>
+							{#each savedChannels as channel}
+								<div class="flex flex-row items-center gap-4">
+									<img
+										src="/assets/chevron_forward.svg"
+										class="size-6 brightness-0 dark:brightness-100"
+										alt="chevron" />
+									<a
+										class="w-full cursor-pointer rounded-md {channel.id == currentChannelId
+											? 'border border-blue-400 hover:border-blue-500'
+											: ''} hover: bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
+										onclick={() => refreshChat()}
+										href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a>
+								</div>
+							{/each}
+							<div class="flex w-full flex-row gap-4">
+								<button
+									class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
+									onclick={onCreateChannelOpen}>Create Channel</button>
+								<button
+									class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
+									onclick={onListChannelsOpen}>List Channels</button>
+							</div>
 						</div>
-					{/each}
-					<div class="flex w-full flex-row gap-4">
-						<button
-							class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
-							onclick={onCreateChannelOpen}>Create Channel</button>
-						<button
-							class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
-							onclick={onListChannelsOpen}>List Channels</button>
-					</div>
+					{/if}
 				</div>
 			</div>
 		</section>
