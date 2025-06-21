@@ -27,17 +27,20 @@
 	class Channel {
 		id: string;
 		name: string;
+		expiration: string;
 		password: string | null = null;
 		savedPassword: string | null = null;
 
 		constructor(
 			id: string,
 			name: string,
+			expiration: Date,
 			password: string | null = null,
 			savedPassword: string | null = null
 		) {
 			this.id = id;
 			this.name = name;
+			this.expiration = expiration.toString();
 
 			this.password = password;
 			this.savedPassword = savedPassword;
@@ -109,13 +112,37 @@
 	const avatars = new Avatars(client);
 	const storage = new Storage(client);
 
+	function getCurrentChannel(): Channel | undefined {
+		console.log(savedChannels);
+		const channel = savedChannels.find((c) => c.id == currentChannelId);
+		return channel;
+	}
+
 	async function refreshChat(password: string | null = null) {
 		await new Promise((r) => setTimeout(r, 100));
 		const c = page.url.searchParams.get('c');
 		const id = c ? c : env.PUBLIC_MAIN_CHANNEL_ID;
 		messages = [];
 		currentChannelId = id;
+		await handleSelfDestruct();
 		await getLatestMessages();
+	}
+
+	// this is probably a bad idea
+	async function handleSelfDestruct() {
+		const expiration = getCurrentChannel()?.expiration;
+		if (!expiration) {
+			return;
+		}
+		const expirationDate = new Date(expiration);
+		if (expirationDate.getTime() < Date.now()) {
+			alert('Channel deleted');
+			savedChannels = savedChannels.filter((c) => c.id != currentChannelId);
+			saveSavedChannels();
+			await databases.deleteDocument('main', env.PUBLIC_CHANNELS_ID, currentChannelId);
+			currentChannelId = env.PUBLIC_MAIN_CHANNEL_ID;
+			refreshChat();
+		}
 	}
 
 	async function submit(event: Event) {
@@ -182,7 +209,9 @@
 
 	async function getAllChannels() {
 		let res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID);
-		allChannels = res.documents.map((doc) => new Channel(doc.$id, doc.name, doc.password));
+		allChannels = res.documents.map(
+			(doc) => new Channel(doc.$id, doc.name, new Date(doc.expiration), doc.password)
+		);
 	}
 
 	function loadSavedInfo() {
@@ -198,12 +227,16 @@
 
 		const channels = localStorage.getItem('savedChannels');
 		if (channels == null) {
-			const newMainChannel = new Channel(env.PUBLIC_MAIN_CHANNEL_ID, 'Main');
+			const newMainChannel = new Channel(env.PUBLIC_MAIN_CHANNEL_ID, 'Main', new Date(2035, 0));
 			localStorage.setItem('savedChannels', JSON.stringify([newMainChannel]));
 			savedChannels = [newMainChannel];
 		} else {
 			savedChannels = JSON.parse(channels);
 		}
+	}
+
+	function saveSavedChannels() {
+		localStorage.setItem('savedChannels', JSON.stringify(savedChannels));
 	}
 
 	onMount(async () => {
@@ -428,7 +461,7 @@
 			}
 		}
 
-		localStorage.setItem('savedChannels', JSON.stringify(savedChannels));
+		saveSavedChannels();
 	}
 </script>
 

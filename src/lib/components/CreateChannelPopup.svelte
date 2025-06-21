@@ -32,6 +32,8 @@
 				offset = day;
 			case '1w':
 				offset = day * 7;
+			case '-1h':
+				offset = -hour;
 		}
 
 		const futureDate = new Date(Date.now() + offset);
@@ -70,6 +72,7 @@
 				<option class="text-black" value="4h">4 Hours</option>
 				<option class="text-black" value="1d">1 Day</option>
 				<option class="text-black" value="1w">1 Week</option>
+				<option class="text-black" value="-1h">-1 Hours</option>
 			</select>
 		</label>
 		<label class="dark:text-white">
