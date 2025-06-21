@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
 	import Popup from '$lib/components/Popup.svelte';
+	import { page } from '$app/state';
 
 	import {
 		Avatars,
@@ -31,7 +32,7 @@
 			this.id = id;
 			this.name = name;
 
-			this.password = null;
+			this.password = password;
 		}
 	}
 
@@ -76,6 +77,7 @@
 		}
 	}
 
+	// STATE
 	let messages: Message[] = $state([]);
 	let newMessage: string = $state('');
 	let messagesContainer: HTMLDivElement | null = $state(null);
@@ -88,6 +90,10 @@
 	let createChannelPopupShown: boolean = $state(false);
 	let savedChannels: Channel[] = $state([]);
 	let allChannels: Channel[] = $state([]);
+	let currentChannelId: string = $state(env.PUBLIC_MAIN_CHANNEL_ID);
+	let channelCreationName: string = $state('');
+	let channelCreationPassword: string = $state('');
+	let channelCreationExpiration: string = $state('');
 
 	let messageGroups: any[] = $derived(groupsFromMessages(messages));
 
@@ -97,6 +103,15 @@
 	const databases = new Databases(client);
 	const avatars = new Avatars(client);
 	const storage = new Storage(client);
+
+	async function refreshChat() {
+		await new Promise((r) => setTimeout(r, 10));
+		const c = page.url.searchParams.get('c');
+		const id = c ? c : env.PUBLIC_MAIN_CHANNEL_ID;
+		messages = [];
+		currentChannelId = id;
+		await getLatestMessages(id);
+	}
 
 	async function submit(event: Event) {
 		if (newMessage.trim() == '') {
@@ -127,12 +142,14 @@
 		await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
 			content: messageToSend,
 			username,
-			avatar_id: currentAvatarId
+			avatar_id: currentAvatarId,
+			channels: currentChannelId
 		});
 	}
 
-	async function getLatestMessages() {
+	async function getLatestMessages(channelId: string = env.PUBLIC_MAIN_CHANNEL_ID) {
 		let res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
+			Query.equal('channels', channelId),
 			Query.orderDesc('$createdAt'),
 			Query.limit(20)
 		]);
@@ -141,7 +158,9 @@
 
 	async function getAllChannels() {
 		let res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID);
+		console.log(res);
 		allChannels = res.documents.map((doc) => new Channel(doc.$id, doc.name, doc.password));
+		console.log(allChannels);
 	}
 
 	function loadSavedInfo() {
@@ -165,8 +184,9 @@
 	}
 
 	onMount(async () => {
-		await getLatestMessages();
+		// await getLatestMessages();
 		await getAllChannels();
+		await refreshChat();
 		client.subscribe(
 			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
 			messageRecieved
@@ -220,6 +240,7 @@
 		const lastMessage = messages.at(-1);
 		const lastMessageId = lastMessage?.id;
 		const res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
+			Query.equal('channels', currentChannelId),
 			Query.limit(10),
 			lastMessageId ? Query.cursorBefore(lastMessageId) : ''
 		]);
@@ -324,13 +345,54 @@
 	// function toggleTheme() {
 	// 	document.documentElement.classList.toggle('dark');
 	// }
+	//
+	async function onCreateChannel() {
+		if (channelCreationName.trim() == '') {
+			alert('Please provide a channel name');
+			return;
+		}
+		if (channelCreationExpiration == '') {
+			alert('Please provide an expiration date');
+			return;
+		}
 
-	function onCreateChannel() {
-		console.log('AAA');
+		createChannelPopupShown = false;
+
+		const min = 1000 * 60;
+		const hour = min * 60;
+		const day = hour * 24;
+		let offset: number = 0;
+		switch (channelCreationExpiration) {
+			case '1h':
+				offset = hour;
+			case '4h':
+				offset = hour * 4;
+			case '1d':
+				offset = day;
+			case '1w':
+				offset = day * 7;
+		}
+
+		const futureDate = new Date(Date.now() + offset);
+		const res = await fetch('/api/create_channel', {
+			method: 'POST',
+			body: JSON.stringify({
+				channelName: channelCreationName,
+				expiration: futureDate,
+				password: channelCreationPassword
+			})
+		});
+		allChannels = [];
+		await getAllChannels();
+		console.log(await res.text());
+	}
+
+	function onCreateChannelOpen() {
 		createChannelPopupShown = true;
 	}
 </script>
 
+<!-- PAGE -->
 {#if createChannelPopupShown}
 	<Popup>
 		<div class="flex w-full flex-row items-start justify-between">
@@ -345,6 +407,7 @@
 
 				<input
 					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
+					bind:value={channelCreationName}
 				/>
 			</label>
 			<label class="dark:text-white" title="In how long will this channel be deleted">
@@ -352,11 +415,12 @@
 				<select
 					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md"
 					required
+					bind:value={channelCreationExpiration}
 				>
 					<option class="text-black" value="1h">1 Hour</option>
 					<option class="text-black" value="4h">4 Hours</option>
-					<option class="text-black" value="4h">1 Day</option>
-					<option class="text-black" value="4h">1 Week</option>
+					<option class="text-black" value="1d">1 Day</option>
+					<option class="text-black" value="1w">1 Week</option>
 				</select>
 			</label>
 			<label class="dark:text-white">
@@ -364,13 +428,14 @@
 				<input
 					type="password"
 					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
+					bind:value={channelCreationPassword}
 				/>
 			</label>
 			<input
 				type="submit"
 				value="Create Channel"
 				class="cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
-				onclick={() => (createChannelPopupShown = false)}
+				onclick={onCreateChannel}
 			/>
 		</form>
 	</Popup>
@@ -497,14 +562,17 @@
 								alt="chevron"
 							/>
 							<a
-								class="w-full cursor-pointer rounded-md border-2 border-blue-400 bg-slate-300/10 px-4 py-2 transition hover:border-blue-500 dark:text-white"
+								class="w-full cursor-pointer rounded-md border-2 {channel.id == currentChannelId
+									? 'border-blue-400'
+									: ''} bg-slate-300/10 px-4 py-2 transition hover:border-blue-500 dark:text-white"
+								onclick={refreshChat}
 								href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a
 							>
 						</div>
 					{/each}
 					<button
 						class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
-						onclick={onCreateChannel}>Create Channel</button
+						onclick={onCreateChannelOpen}>Create Channel</button
 					>
 				</div>
 			</div>
@@ -514,7 +582,7 @@
 			class="fixed top-8 right-8 flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
 			onclick={toggleSidebar}
 		>
-			<img src="/assets/chevron_forward.svg" class="rotate-180" />
+			<img src="/assets/chevron_forward.svg" class="rotate-180" alt="open sidebar" />
 		</button>
 	{/if}
 </main>
