@@ -14,6 +14,7 @@
 		type RealtimeResponseEvent
 	} from 'appwrite';
 	import { onMount } from 'svelte';
+	import CreateChannelPopup from '$lib/components/CreateChannelPopup.svelte';
 
 	let username = $state('');
 
@@ -91,9 +92,6 @@
 	let savedChannels: Channel[] = $state([]);
 	let allChannels: Channel[] = $state([]);
 	let currentChannelId: string = $state(env.PUBLIC_MAIN_CHANNEL_ID);
-	let channelCreationName: string = $state('');
-	let channelCreationPassword: string = $state('');
-	let channelCreationExpiration: string = $state('');
 
 	let messageGroups: any[] = $derived(groupsFromMessages(messages));
 
@@ -345,46 +343,11 @@
 	// function toggleTheme() {
 	// 	document.documentElement.classList.toggle('dark');
 	// }
-	//
-	async function onCreateChannel() {
-		if (channelCreationName.trim() == '') {
-			alert('Please provide a channel name');
-			return;
-		}
-		if (channelCreationExpiration == '') {
-			alert('Please provide an expiration date');
-			return;
-		}
 
+	async function onChannelCreate() {
 		createChannelPopupShown = false;
-
-		const min = 1000 * 60;
-		const hour = min * 60;
-		const day = hour * 24;
-		let offset: number = 0;
-		switch (channelCreationExpiration) {
-			case '1h':
-				offset = hour;
-			case '4h':
-				offset = hour * 4;
-			case '1d':
-				offset = day;
-			case '1w':
-				offset = day * 7;
-		}
-
-		const futureDate = new Date(Date.now() + offset);
-		const res = await fetch('/api/create_channel', {
-			method: 'POST',
-			body: JSON.stringify({
-				channelName: channelCreationName,
-				expiration: futureDate,
-				password: channelCreationPassword
-			})
-		});
 		allChannels = [];
 		await getAllChannels();
-		console.log(await res.text());
 	}
 
 	function onCreateChannelOpen() {
@@ -394,51 +357,12 @@
 
 <!-- PAGE -->
 {#if createChannelPopupShown}
-	<Popup>
-		<div class="flex w-full flex-row items-start justify-between">
-			<h1 class="mb-4 text-3xl dark:text-white">Create Channel</h1>
-			<button onclick={() => (createChannelPopupShown = false)} class="cursor-pointer"
-				><img src="/assets/close.svg" alt="close" /></button
-			>
-		</div>
-		<form class="flex flex-col gap-4">
-			<label class="dark:text-white"
-				>Channel Name<span class="text-red-500">*</span>
-
-				<input
-					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
-					bind:value={channelCreationName}
-				/>
-			</label>
-			<label class="dark:text-white" title="In how long will this channel be deleted">
-				Expiration Date<span class="text-red-500">*</span>
-				<select
-					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md"
-					required
-					bind:value={channelCreationExpiration}
-				>
-					<option class="text-black" value="1h">1 Hour</option>
-					<option class="text-black" value="4h">4 Hours</option>
-					<option class="text-black" value="1d">1 Day</option>
-					<option class="text-black" value="1w">1 Week</option>
-				</select>
-			</label>
-			<label class="dark:text-white">
-				Password
-				<input
-					type="password"
-					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
-					bind:value={channelCreationPassword}
-				/>
-			</label>
-			<input
-				type="submit"
-				value="Create Channel"
-				class="cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
-				onclick={onCreateChannel}
-			/>
-		</form>
-	</Popup>
+	<CreateChannelPopup
+		onClose={() => {
+			createChannelPopupShown = false;
+		}}
+		{onChannelCreate}
+	></CreateChannelPopup>
 {/if}
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
