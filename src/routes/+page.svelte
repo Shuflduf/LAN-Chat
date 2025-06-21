@@ -370,7 +370,7 @@
 		class="flex w-full max-w-4xl flex-col rounded-md border border-slate-500 bg-slate-300/10 shadow-md backdrop-blur-xs"
 	>
 		<div
-			class="flex flex-col-reverse overflow-y-auto p-2"
+			class="flex h-full flex-col-reverse overflow-y-auto p-2"
 			onscroll={onMessagesScrolled}
 			bind:this={messagesContainer}
 		>
