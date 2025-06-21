@@ -26,14 +26,19 @@
 		switch (channelCreationExpiration) {
 			case '1h':
 				offset = hour;
+				break;
 			case '4h':
 				offset = hour * 4;
+				break;
 			case '1d':
 				offset = day;
+				break;
 			case '1w':
 				offset = day * 7;
+				break;
 			case '-1h':
 				offset = -hour;
+				break;
 		}
 
 		const futureDate = new Date(Date.now() + offset);
