@@ -28,12 +28,19 @@
 		id: string;
 		name: string;
 		password: string | null = null;
+		savedPassword: string | null = null;
 
-		constructor(id: string, name: string, password: string | null = null) {
+		constructor(
+			id: string,
+			name: string,
+			password: string | null = null,
+			savedPassword: string | null = null
+		) {
 			this.id = id;
 			this.name = name;
 
 			this.password = password;
+			this.savedPassword = savedPassword;
 		}
 	}
 
@@ -51,7 +58,6 @@
 		}
 	}
 
-	// TODO: eventually add like ip or hashed ip in case multiple people have same name
 	class Message {
 		content: string;
 		username: string;
@@ -103,13 +109,13 @@
 	const avatars = new Avatars(client);
 	const storage = new Storage(client);
 
-	async function refreshChat() {
+	async function refreshChat(password: string | null = null) {
 		await new Promise((r) => setTimeout(r, 10));
 		const c = page.url.searchParams.get('c');
 		const id = c ? c : env.PUBLIC_MAIN_CHANNEL_ID;
 		messages = [];
 		currentChannelId = id;
-		await getLatestMessages(id);
+		await getLatestMessages();
 	}
 
 	async function submit(event: Event) {
@@ -146,20 +152,31 @@
 		});
 	}
 
-	async function getLatestMessages(channelId: string = env.PUBLIC_MAIN_CHANNEL_ID) {
-		let res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
-			Query.equal('channels', channelId),
-			Query.orderDesc('$createdAt'),
-			Query.limit(20)
-		]);
-		messages = res.documents.map(messageFromDoc);
+	async function getLatestMessages() {
+		// let res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
+		// 	Query.equal('channels', channelId),
+		// 	Query.orderDesc('$createdAt'),
+		// 	Query.limit(20)
+		// ]);
+		const res = await fetch('/api/get_messages', {
+			method: 'POST',
+			body: JSON.stringify({
+				id: currentChannelId,
+				password: 'password'
+			})
+		});
+		const json = JSON.parse(await res.text());
+		if (json.error) {
+			console.log(json.error);
+			return;
+		}
+		const docs: Models.Document[] = json;
+		messages = docs.map(messageFromDoc);
 	}
 
 	async function getAllChannels() {
 		let res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID);
-		console.log(res);
 		allChannels = res.documents.map((doc) => new Channel(doc.$id, doc.name, doc.password));
-		console.log(allChannels);
 	}
 
 	function loadSavedInfo() {
@@ -324,7 +341,6 @@
 				currentGroup[0].createdAt
 			)
 		);
-		console.log('out:', groups);
 		return groups;
 	}
 
@@ -352,21 +368,37 @@
 		listChannelsPopupShown = true;
 	}
 
-	function toggleChannel(channel: Channel) {
+	async function toggleChannel(channel: Channel) {
 		if (channel.id == env.PUBLIC_MAIN_CHANNEL_ID) {
 			return alert("Can't remove Main channel");
 		}
-		console.log(channel);
 		const saved = savedChannels.map((c) => c.id).includes(channel.id);
 		if (saved) {
 			const index = savedChannels.map((c) => c.id).indexOf(channel.id);
 			savedChannels.splice(index, 1);
 		} else {
-			savedChannels.push(channel);
+			if (channel.password) {
+				const promptPass = prompt('Enter password');
+				console.log(promptPass);
+				const res = await fetch('/api/verify', {
+					method: 'POST',
+					body: JSON.stringify({
+						channel,
+						pass: promptPass
+					})
+				});
+				const resText = await res.text();
+				const allowed = resText == 'true';
+				if (allowed) {
+					channel.savedPassword = promptPass;
+					savedChannels.push(channel);
+				}
+			} else {
+				savedChannels.push(channel);
+			}
 		}
 
 		localStorage.setItem('savedChannels', JSON.stringify(savedChannels));
-		console.log(savedChannels);
 	}
 </script>
 
@@ -514,7 +546,7 @@
 				>
 					<h1 class="text-center text-2xl dark:text-white">Channels</h1>
 
-					{#each allChannels as channel}
+					{#each savedChannels as channel}
 						<div class="flex flex-row items-center gap-4">
 							<img
 								src="/assets/chevron_forward.svg"
@@ -525,7 +557,7 @@
 								class="w-full cursor-pointer rounded-md {channel.id == currentChannelId
 									? 'border border-blue-400 hover:border-blue-500'
 									: ''} hover: bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
-								onclick={refreshChat}
+								onclick={() => refreshChat(channel.password)}
 								href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a
 							>
 						</div>
