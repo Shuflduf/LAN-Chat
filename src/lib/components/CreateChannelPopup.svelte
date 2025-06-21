@@ -47,8 +47,8 @@
 			body: JSON.stringify({
 				channelName: channelCreationName,
 				expiration: futureDate,
-				password: channelCreationPassword
-			})
+				password: channelCreationPassword,
+			}),
 		});
 		// allChannels = [];
 		// await getAllChannels();
@@ -63,16 +63,14 @@
 
 			<input
 				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
-				bind:value={channelCreationName}
-			/>
+				bind:value={channelCreationName} />
 		</label>
 		<label class="dark:text-white" title="In how long will this channel be deleted">
 			Expiration Date<span class="text-red-500">*</span>
 			<select
 				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md"
 				required
-				bind:value={channelCreationExpiration}
-			>
+				bind:value={channelCreationExpiration}>
 				<option class="text-black" value="1h">1 Hour</option>
 				<option class="text-black" value="4h">4 Hours</option>
 				<option class="text-black" value="1d">1 Day</option>
@@ -85,14 +83,12 @@
 			<input
 				type="password"
 				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
-				bind:value={channelCreationPassword}
-			/>
+				bind:value={channelCreationPassword} />
 		</label>
 		<input
 			type="submit"
 			value="Create Channel"
 			class="cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
-			onclick={onCreateChannel}
-		/>
+			onclick={onCreateChannel} />
 	</form>
 </Popup>

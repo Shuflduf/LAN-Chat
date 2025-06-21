@@ -11,17 +11,18 @@
 		Query,
 		Storage,
 		type Models,
-		type RealtimeResponseEvent
+		type RealtimeResponseEvent,
 	} from 'appwrite';
 	import { onMount } from 'svelte';
 	import CreateChannelPopup from '$lib/components/CreateChannelPopup.svelte';
+	import SmallPopup from '$lib/components/SmallPopup.svelte';
 
 	let username = $state('');
 
 	enum MessageType {
 		User,
 		System,
-		Temp
+		Temp,
 	}
 
 	class Channel {
@@ -36,7 +37,7 @@
 			name: string,
 			expiration: Date,
 			password: string | null = null,
-			savedPassword: string | null = null
+			savedPassword: string | null = null,
 		) {
 			this.id = id;
 			this.name = name;
@@ -75,7 +76,7 @@
 			createdAt: Date,
 			id: string,
 			type: MessageType = MessageType.User,
-			avatarId: string | null = null
+			avatarId: string | null = null,
 		) {
 			this.content = content;
 			this.username = username;
@@ -88,11 +89,13 @@
 	}
 
 	// STATE
-	let messages: Message[] = $state([]);
-	let newMessage: string = $state('');
 	let messagesContainer: HTMLDivElement | null = $state(null);
 	let newMessageBox: HTMLInputElement | null = $state(null);
 	let avatarFilePicker: HTMLInputElement | null = $state(null);
+	let passwordPrompt: HTMLDivElement | null = $state(null);
+
+	let messages: Message[] = $state([]);
+	let newMessage: string = $state('');
 	let loadingMessages: boolean = $state(false);
 	let currentAvatarPath: string | null = $state(null);
 	let currentAvatarId: string | null = $state(null);
@@ -102,6 +105,8 @@
 	let allChannels: Channel[] = $state([]);
 	let currentChannelId: string = $state(env.PUBLIC_MAIN_CHANNEL_ID);
 	let listChannelsPopupShown: boolean = $state(false);
+	let passwordPromptShown: boolean = $state(false);
+	let promptPass: string = $state('');
 
 	let messageGroups: any[] = $derived(groupsFromMessages(messages));
 
@@ -168,14 +173,14 @@
 			new Date(),
 			ID.unique(),
 			MessageType.Temp,
-			currentAvatarId
+			currentAvatarId,
 		);
 		messages.unshift(tempMessage);
 		let res = await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
 			content: messageToSend,
 			username,
 			avatar_id: currentAvatarId,
-			channels: currentChannelId
+			channels: currentChannelId,
 		});
 		messages.unshift(messageFromDoc(res));
 		messages = messages.filter((m) => m.type != MessageType.Temp || m.id != tempMessage.id);
@@ -197,8 +202,8 @@
 			method: 'POST',
 			body: JSON.stringify({
 				id: currentChannelId,
-				password: getCurrentChannel()?.savedPassword
-			})
+				password: getCurrentChannel()?.savedPassword,
+			}),
 		});
 		const json = JSON.parse(await res.text());
 		if (json.error) {
@@ -212,7 +217,7 @@
 	async function getAllChannels() {
 		let res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID);
 		allChannels = res.documents.map(
-			(doc) => new Channel(doc.$id, doc.name, new Date(doc.expiration), doc.password)
+			(doc) => new Channel(doc.$id, doc.name, new Date(doc.expiration), doc.password),
 		);
 	}
 
@@ -248,7 +253,7 @@
 		await refreshChat();
 		client.subscribe(
 			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
-			messageRecieved
+			messageRecieved,
 		);
 	});
 
@@ -299,8 +304,8 @@
 			body: JSON.stringify({
 				id: currentChannelId,
 				password: savedChannels.find((c) => c.id == currentChannelId)?.savedPassword,
-				lastMessage: lastMessageId
-			})
+				lastMessage: lastMessageId,
+			}),
 		});
 		const json = JSON.parse(await res.text());
 		// const res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
@@ -318,7 +323,7 @@
 
 		if (newMessages.length == 0) {
 			messages.push(
-				new Message('No more messages!', 'SYSTEM', new Date(0), '0', MessageType.System)
+				new Message('No more messages!', 'SYSTEM', new Date(0), '0', MessageType.System),
 			);
 			loadingMessages = false;
 			return;
@@ -334,7 +339,7 @@
 			new Date(doc.$createdAt),
 			doc.$id,
 			MessageType.User,
-			doc.avatar_id
+			doc.avatar_id,
 		);
 	}
 
@@ -389,7 +394,7 @@
 					currentGroup,
 					tmpUsername,
 					tmpAvatarId,
-					tmpCreatedAt
+					tmpCreatedAt,
 				);
 				groups.push(newMessageGroup);
 				currentGroup = [];
@@ -401,8 +406,8 @@
 				currentGroup,
 				currentGroup[0].username,
 				currentGroup[0].avatarId,
-				currentGroup[0].createdAt
-			)
+				currentGroup[0].createdAt,
+			),
 		);
 		return groups;
 	}
@@ -431,7 +436,9 @@
 		listChannelsPopupShown = true;
 	}
 
+	let channelBeingAdded: Channel | null = null;
 	async function toggleChannel(channel: Channel) {
+		channelBeingAdded = channel;
 		if (channel.id == env.PUBLIC_MAIN_CHANNEL_ID) {
 			return alert("Can't remove Main channel");
 		}
@@ -444,20 +451,21 @@
 			}
 		} else {
 			if (channel.password) {
-				const promptPass = prompt('Enter password');
-				const res = await fetch('/api/verify', {
-					method: 'POST',
-					body: JSON.stringify({
-						channel,
-						pass: promptPass
-					})
-				});
-				const resText = await res.text();
-				const allowed = resText == 'true';
-				if (allowed) {
-					channel.savedPassword = promptPass;
-					savedChannels.push(channel);
-				}
+				passwordPromptShown = true;
+				// promptPass = prompt('Enter password') ?? '';
+				// const res = await fetch('/api/verify', {
+				// 	method: 'POST',
+				// 	body: JSON.stringify({
+				// 		channel,
+				// 		pass: promptPass,
+				// 	}),
+				// });
+				// const resText = await res.text();
+				// const allowed = resText == 'true';
+				// if (allowed) {
+				// 	channel.savedPassword = promptPass;
+				// 	savedChannels.push(channel);
+				// }
 			} else {
 				savedChannels.push(channel);
 			}
@@ -465,18 +473,52 @@
 
 		saveSavedChannels();
 	}
+
+	function sortedChannels(): Channel[] {
+		const savedChannelIds = savedChannels.map((c) => c.id);
+		const notAdded = allChannels.filter((c) => !savedChannelIds.includes(c.id));
+		return savedChannels.concat(notAdded);
+	}
+
+	async function addPasswordChannel() {
+		passwordPromptShown = false;
+		const res = await fetch('/api/verify', {
+			method: 'POST',
+			body: JSON.stringify({
+				channel: channelBeingAdded,
+				pass: promptPass,
+			}),
+		});
+		const resText = await res.text();
+		const allowed = resText == 'true';
+		if (allowed && channelBeingAdded != null) {
+			channelBeingAdded.savedPassword = promptPass;
+			savedChannels.push(channelBeingAdded);
+		}
+		promptPass = '';
+	}
 </script>
 
 <!-- PAGE -->
+{#if passwordPromptShown}
+	<SmallPopup title="Enter Password" onClose={() => (passwordPromptShown = false)}>
+		<form onsubmit={addPasswordChannel}>
+			<input
+				class="w-full rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
+				type="password"
+				bind:value={promptPass} />
+		</form>
+	</SmallPopup>
+{/if}
+
 {#if listChannelsPopupShown}
 	<Popup
 		title="List Channels"
 		onClose={() => {
 			listChannelsPopupShown = false;
-		}}
-	>
+		}}>
 		<div class="flex flex-row flex-wrap gap-4">
-			{#each allChannels as channel}
+			{#each sortedChannels() as channel}
 				<button
 					class="rounded-md border bg-slate-300/10 px-4 py-2 shadow-md dark:text-white {savedChannels
 						.map((c) => c.id)
@@ -487,11 +529,9 @@
 					><div class="flex flex-row gap-2">
 						{#if channel.password}<img
 								src="/assets/key.svg"
-								alt="password protected channel"
-							/>{/if}
+								alt="password protected channel" />{/if}
 						<p>{channel.name}</p>
-					</div></button
-				>
+					</div></button>
 			{/each}
 		</div>
 	</Popup>
@@ -501,19 +541,16 @@
 		onClose={() => {
 			createChannelPopupShown = false;
 		}}
-		{onChannelCreate}
-	></CreateChannelPopup>
+		{onChannelCreate}></CreateChannelPopup>
 {/if}
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
 	<div
-		class="flex w-full max-w-4xl flex-col rounded-md border border-slate-500 bg-slate-300/10 shadow-md backdrop-blur-xs"
-	>
+		class="flex w-full max-w-4xl flex-col rounded-md border border-slate-500 bg-slate-300/10 shadow-md backdrop-blur-xs">
 		<div
 			class="flex h-full flex-col-reverse overflow-y-auto p-2"
 			onscroll={onMessagesScrolled}
-			bind:this={messagesContainer}
-		>
+			bind:this={messagesContainer}>
 			{#each messageGroups as group}
 				<div class="flex w-full gap-2 p-2">
 					<img
@@ -522,11 +559,9 @@
 							: avatars.getInitials(group.username)}
 						class="h-8 w-8 rounded-md object-cover shadow-md"
 						title={group.avatarId}
-						alt="avatar of {group.username}"
-					/>
+						alt="avatar of {group.username}" />
 					<div
-						class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
-					>
+						class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
 						<p class="text-xs text-gray-400" title={group.createdAt.toString()}>
 							<span>{group.username}</span>
 							<span>&nbsp;-&nbsp;</span>
@@ -535,8 +570,7 @@
 						{#each group.messages.reverse() as message}
 							<p
 								class={message.type == MessageType.Temp ? 'text-gray-400' : 'dark:text-white'}
-								title={message.id}
-							>
+								title={message.id}>
 								{message.content}
 							</p>
 						{/each}
@@ -549,14 +583,12 @@
 				class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
 				placeholder="Send Message"
 				bind:value={newMessage}
-				bind:this={newMessageBox}
-			/>
+				bind:this={newMessageBox} />
 		</form>
 	</div>
 	{#if sidebarShown}
 		<section
-			class="flex h-full w-lg flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
-		>
+			class="flex h-full w-lg flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
 			<div class="flex w-full flex-row justify-end gap-4">
 				<!-- <button -->
 				<!-- 	class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500" -->
@@ -571,47 +603,40 @@
 			</div>
 			<div class="flex flex-col gap-4 overflow-y-auto">
 				<div
-					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
-				>
+					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
 					<h1 class="text-center text-2xl dark:text-white">Profile Customization</h1>
 					<!-- TODO: add toggle thing -->
 					<input
 						class="focus_shadow-xl rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
 						placeholder="Username"
 						bind:value={username}
-						onchange={onUsernameChanged}
-					/>
+						onchange={onUsernameChanged} />
 					{#if currentAvatarPath}
 						<img
 							src={currentAvatarPath}
 							class="rounded-md border border-slate-500 object-cover shadow-md"
 							alt="current avatar"
-							title={currentAvatarId}
-						/>
+							title={currentAvatarId} />
 					{/if}
 					<div class="flex flex-row gap-4">
 						<button
 							class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
-							onclick={() => avatarFilePicker?.click()}>Upload Avatar</button
-						>
+							onclick={() => avatarFilePicker?.click()}>Upload Avatar</button>
 						<input
 							type="file"
 							class="hidden"
 							accept="image/png, image/jpeg, image/webp"
 							onchange={onAvatarUploadStart}
-							bind:this={avatarFilePicker}
-						/>
+							bind:this={avatarFilePicker} />
 						{#if currentAvatarId}
 							<button
 								class="cursor-pointer rounded-md bg-red-500 px-4 py-2 text-white shadow-md transition hover:bg-red-600"
-								onclick={removeAvatar}>Remove</button
-							>
+								onclick={removeAvatar}>Remove</button>
 						{/if}
 					</div>
 				</div>
 				<div
-					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
-				>
+					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
 					<h1 class="text-center text-2xl dark:text-white">Channels</h1>
 
 					{#each savedChannels as channel}
@@ -619,26 +644,22 @@
 							<img
 								src="/assets/chevron_forward.svg"
 								class="size-6 brightness-0 dark:brightness-100"
-								alt="chevron"
-							/>
+								alt="chevron" />
 							<a
 								class="w-full cursor-pointer rounded-md {channel.id == currentChannelId
 									? 'border border-blue-400 hover:border-blue-500'
 									: ''} hover: bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
 								onclick={() => refreshChat(channel.password)}
-								href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a
-							>
+								href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a>
 						</div>
 					{/each}
 					<div class="flex w-full flex-row gap-4">
 						<button
 							class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
-							onclick={onCreateChannelOpen}>Create Channel</button
-						>
+							onclick={onCreateChannelOpen}>Create Channel</button>
 						<button
 							class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
-							onclick={onListChannelsOpen}>List Channels</button
-						>
+							onclick={onListChannelsOpen}>List Channels</button>
 					</div>
 				</div>
 			</div>
@@ -646,8 +667,7 @@
 	{:else}
 		<button
 			class="fixed top-8 right-8 flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
-			onclick={toggleSidebar}
-		>
+			onclick={toggleSidebar}>
 			<img src="/assets/chevron_forward.svg" class="rotate-180" alt="open sidebar" />
 		</button>
 	{/if}

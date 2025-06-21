@@ -1,15 +1,15 @@
 @import 'tailwindcss';
 
 html {
-  position: fixed;
-  width: 100%;
-  background-size: 40px 40px;
-  background-position:
-    20px 20px,
-    0 0,
-    0 0;
-  background-image:
-    radial-gradient(circle, #ccc 1.2px, rgba(0, 0, 0, 0) 1px),
-    linear-gradient(to right, #eee 1px, transparent 1px),
-    linear-gradient(to bottom, #eee 1px, transparent 1px);
+	position: fixed;
+	width: 100%;
+	background-size: 40px 40px;
+	background-position:
+		20px 20px,
+		0 0,
+		0 0;
+	background-image:
+		radial-gradient(circle, #ccc 1.2px, rgba(0, 0, 0, 0) 1px),
+		linear-gradient(to right, #eee 1px, transparent 1px),
+		linear-gradient(to bottom, #eee 1px, transparent 1px);
 }
