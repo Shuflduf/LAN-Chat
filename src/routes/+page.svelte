@@ -290,6 +290,10 @@
 		currentAvatarId = null;
 		currentAvatarPath = null;
 	}
+
+	function toggleTheme() {
+		document.documentElement.classList.toggle('dark');
+	}
 </script>
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
@@ -322,7 +326,9 @@
 						class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
 					>
 						<p class="text-xs text-gray-400" title={group.createdAt.toString()}>
-							{group.username} - {formatDate(group.createdAt)}
+							<span>{group.username}</span>
+							<span>&nbsp;-&nbsp;</span>
+							<span dir="ltr">{formatDate(group.createdAt)}</span>
 						</p>
 						{#each group.messages.reverse() as message}
 							<p class="{message.type == MessageType.Temp ? 'text-gray-400' : ''} dark:text-white">
@@ -346,12 +352,18 @@
 		<section
 			class="flex h-full w-lg flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
 		>
-			<button
-				class="flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
-				onclick={toggleSidebar}
-				><p>Hide Sidebar</p>
-				<img src="/assets/chevron_forward.svg" alt="chevron" />
-			</button>
+			<div class="flex w-full flex-row justify-end gap-4">
+				<!-- <button -->
+				<!-- 	class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500" -->
+				<!-- 	onclick={toggleTheme}>Change Theme</button -->
+				<!-- > -->
+				<button
+					class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
+					onclick={toggleSidebar}
+					><p>Hide Sidebar</p>
+					<img src="/assets/chevron_forward.svg" alt="chevron" />
+				</button>
+			</div>
 			<div class="flex flex-col gap-4 overflow-y-auto">
 				<div
 					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs"
@@ -369,12 +381,13 @@
 							src={currentAvatarPath}
 							class="rounded-md border border-slate-500 object-cover shadow-md"
 							alt="current avatar"
+							title={currentAvatarId}
 						/>
 					{/if}
 					<div class="flex flex-row gap-4">
 						<button
-							class="w-full cursor-pointer rounded-md bg-blue-400 p-4 text-white shadow-md transition hover:bg-blue-500"
-							onclick={avatarFilePicker?.click()}>Upload Avatar</button
+							class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
+							onclick={() => avatarFilePicker?.click()}>Upload Avatar</button
 						>
 						<input
 							type="file"
@@ -385,7 +398,7 @@
 						/>
 						{#if currentAvatarId}
 							<button
-								class="cursor-pointer rounded-md bg-red-500 p-4 text-white shadow-md transition hover:bg-red-600"
+								class="cursor-pointer rounded-md bg-red-500 px-4 py-2 text-white shadow-md transition hover:bg-red-600"
 								onclick={removeAvatar}>Remove</button
 							>
 						{/if}
