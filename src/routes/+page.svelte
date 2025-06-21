@@ -92,6 +92,7 @@
 	let savedChannels: Channel[] = $state([]);
 	let allChannels: Channel[] = $state([]);
 	let currentChannelId: string = $state(env.PUBLIC_MAIN_CHANNEL_ID);
+	let listChannelsPopupShown: boolean = $state(false);
 
 	let messageGroups: any[] = $derived(groupsFromMessages(messages));
 
@@ -174,8 +175,9 @@
 
 		const channels = localStorage.getItem('savedChannels');
 		if (channels == null) {
-			localStorage.setItem('savedChannels', JSON.stringify([env.PUBLIC_MAIN_CHANNEL_ID]));
-			savedChannels = [new Channel(env.PUBLIC_MAIN_CHANNEL_ID, 'Main')];
+			const newMainChannel = new Channel(env.PUBLIC_MAIN_CHANNEL_ID, 'Main');
+			localStorage.setItem('savedChannels', JSON.stringify([newMainChannel]));
+			savedChannels = [newMainChannel];
 		} else {
 			savedChannels = JSON.parse(channels);
 		}
@@ -345,9 +347,58 @@
 	function onCreateChannelOpen() {
 		createChannelPopupShown = true;
 	}
+
+	function onListChannelsOpen() {
+		listChannelsPopupShown = true;
+	}
+
+	function toggleChannel(channel: Channel) {
+		if (channel.id == env.PUBLIC_MAIN_CHANNEL_ID) {
+			return alert("Can't remove Main channel");
+		}
+		console.log(channel);
+		const saved = savedChannels.map((c) => c.id).includes(channel.id);
+		if (saved) {
+			const index = savedChannels.map((c) => c.id).indexOf(channel.id);
+			savedChannels.splice(index, 1);
+		} else {
+			savedChannels.push(channel);
+		}
+
+		localStorage.setItem('savedChannels', JSON.stringify(savedChannels));
+		console.log(savedChannels);
+	}
 </script>
 
 <!-- PAGE -->
+{#if listChannelsPopupShown}
+	<Popup
+		title="List Channels"
+		onClose={() => {
+			listChannelsPopupShown = false;
+		}}
+	>
+		<div class="flex flex-row flex-wrap gap-4">
+			{#each allChannels as channel}
+				<button
+					class="rounded-md border bg-slate-300/10 px-4 py-2 shadow-md dark:text-white {savedChannels
+						.map((c) => c.id)
+						.includes(channel.id)
+						? 'border-blue-500'
+						: 'border-stone-500'}"
+					onclick={() => toggleChannel(channel)}
+					><div class="flex flex-row gap-2">
+						{#if channel.password}<img
+								src="/assets/key.svg"
+								alt="password protected channel"
+							/>{/if}
+						<p>{channel.name}</p>
+					</div></button
+				>
+			{/each}
+		</div>
+	</Popup>
+{/if}
 {#if createChannelPopupShown}
 	<CreateChannelPopup
 		onClose={() => {
@@ -479,10 +530,16 @@
 							>
 						</div>
 					{/each}
-					<button
-						class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
-						onclick={onCreateChannelOpen}>Create Channel</button
-					>
+					<div class="flex w-full flex-row gap-4">
+						<button
+							class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
+							onclick={onCreateChannelOpen}>Create Channel</button
+						>
+						<button
+							class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
+							onclick={onListChannelsOpen}>List Channels</button
+						>
+					</div>
 				</div>
 			</div>
 		</section>

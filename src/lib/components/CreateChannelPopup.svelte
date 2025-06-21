@@ -49,13 +49,7 @@
 	}
 </script>
 
-<Popup>
-	<div class="flex w-full flex-row items-start justify-between">
-		<h1 class="mb-4 text-3xl dark:text-white">Create Channel</h1>
-		<button onclick={onClose} class="cursor-pointer"
-			><img src="/assets/close.svg" alt="close" /></button
-		>
-	</div>
+<Popup title="Create Channel" {onClose}>
 	<form class="flex flex-col gap-4">
 		<label class="dark:text-white"
 			>Channel Name<span class="text-red-500">*</span>
