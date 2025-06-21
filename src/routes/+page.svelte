@@ -166,17 +166,19 @@
 			messageToSend,
 			username,
 			new Date(),
-			'0',
+			ID.unique(),
 			MessageType.Temp,
 			currentAvatarId
 		);
 		messages.unshift(tempMessage);
-		await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
+		let res = await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
 			content: messageToSend,
 			username,
 			avatar_id: currentAvatarId,
 			channels: currentChannelId
 		});
+		messages.unshift(messageFromDoc(res));
+		messages = messages.filter((m) => m.type != MessageType.Temp || m.id != tempMessage.id);
 	}
 
 	async function getLatestMessages() {
@@ -195,7 +197,7 @@
 			method: 'POST',
 			body: JSON.stringify({
 				id: currentChannelId,
-				password: 'password'
+				password: getCurrentChannel()?.savedPassword
 			})
 		});
 		const json = JSON.parse(await res.text());
@@ -532,7 +534,7 @@
 						</p>
 						{#each group.messages.reverse() as message}
 							<p
-								class="{message.type == MessageType.Temp ? 'text-gray-400' : ''} dark:text-white"
+								class={message.type == MessageType.Temp ? 'text-gray-400' : 'dark:text-white'}
 								title={message.id}
 							>
 								{message.content}
