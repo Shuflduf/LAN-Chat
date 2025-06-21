@@ -110,7 +110,7 @@
 	const storage = new Storage(client);
 
 	async function refreshChat(password: string | null = null) {
-		await new Promise((r) => setTimeout(r, 10));
+		await new Promise((r) => setTimeout(r, 100));
 		const c = page.url.searchParams.get('c');
 		const id = c ? c : env.PUBLIC_MAIN_CHANNEL_ID;
 		messages = [];
@@ -158,6 +158,12 @@
 		// 	Query.orderDesc('$createdAt'),
 		// 	Query.limit(20)
 		// ]);
+
+		if (!savedChannels.map((c) => c.id).includes(currentChannelId)) {
+			alert('Channel not found in saved channels');
+			window.location.replace('/');
+			currentChannelId = env.PUBLIC_MAIN_CHANNEL_ID;
+		}
 		const res = await fetch('/api/get_messages', {
 			method: 'POST',
 			body: JSON.stringify({
@@ -167,7 +173,7 @@
 		});
 		const json = JSON.parse(await res.text());
 		if (json.error) {
-			console.log(json.error);
+			console.error(json.error);
 			return;
 		}
 		const docs: Models.Document[] = json;
@@ -202,13 +208,13 @@
 
 	onMount(async () => {
 		// await getLatestMessages();
+		loadSavedInfo();
 		await getAllChannels();
 		await refreshChat();
 		client.subscribe(
 			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
 			messageRecieved
 		);
-		loadSavedInfo();
 	});
 
 	function messageRecieved(response: RealtimeResponseEvent<unknown>) {
@@ -235,6 +241,7 @@
 		if (messagesContainer) {
 			const scrollLoc = -messagesContainer.scrollTop + messagesContainer.clientHeight;
 			const difference = Math.abs(scrollLoc - messagesContainer.scrollHeight);
+			// console.log(difference);
 			if (difference < 100) {
 				await loadMoreMessages();
 			}
@@ -247,19 +254,40 @@
 		}
 		loadingMessages = true;
 		const lastMessage = messages.at(-1);
+		if (lastMessage?.type != MessageType.User) {
+			loadingMessages = false;
+			return;
+		}
 		const lastMessageId = lastMessage?.id;
-		const res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
-			Query.equal('channels', currentChannelId),
-			Query.limit(10),
-			lastMessageId ? Query.cursorBefore(lastMessageId) : ''
-		]);
-		if (res.documents.length == 0) {
+		const res = await fetch('/api/get_messages', {
+			method: 'POST',
+			body: JSON.stringify({
+				id: currentChannelId,
+				password: savedChannels.find((c) => c.id == currentChannelId)?.savedPassword,
+				lastMessage: lastMessageId
+			})
+		});
+		const json = JSON.parse(await res.text());
+		// const res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
+		// 	Query.equal('channels', currentChannelId),
+		// 	Query.limit(10),
+		// 	lastMessageId ? Query.cursorBefore(lastMessageId) : ''
+		// ]);
+
+		if (json.error) {
+			console.error(json.error);
+			return;
+		}
+		const docs: Models.Document[] = json;
+		const newMessages = docs.map(messageFromDoc);
+
+		if (newMessages.length == 0) {
 			messages.push(
 				new Message('No more messages!', 'SYSTEM', new Date(0), '0', MessageType.System)
 			);
+			loadingMessages = false;
 			return;
 		}
-		const newMessages = res.documents.map(messageFromDoc).reverse();
 		messages = [...messages, ...newMessages];
 		loadingMessages = false;
 	}
@@ -376,10 +404,12 @@
 		if (saved) {
 			const index = savedChannels.map((c) => c.id).indexOf(channel.id);
 			savedChannels.splice(index, 1);
+			if (currentChannelId == channel.id) {
+				refreshChat();
+			}
 		} else {
 			if (channel.password) {
 				const promptPass = prompt('Enter password');
-				console.log(promptPass);
 				const res = await fetch('/api/verify', {
 					method: 'POST',
 					body: JSON.stringify({
@@ -468,7 +498,10 @@
 							<span dir="ltr">{formatDate(group.createdAt)}</span>
 						</p>
 						{#each group.messages.reverse() as message}
-							<p class="{message.type == MessageType.Temp ? 'text-gray-400' : ''} dark:text-white">
+							<p
+								class="{message.type == MessageType.Temp ? 'text-gray-400' : ''} dark:text-white"
+								title={message.id}
+							>
 								{message.content}
 							</p>
 						{/each}
