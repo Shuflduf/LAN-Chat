@@ -190,21 +190,13 @@
 			messageRecieved
 		);
 		loadSavedInfo();
-
-		// const futureDate = new Date(Date.now() + 1000 * 60 * 60);
-		// const res = await fetch('/api/create_channel', {
-		// 	method: 'POST',
-		// 	body: JSON.stringify({
-		// 		channelName: 'gaeming',
-		// 		expiration: futureDate,
-		// 		password: 'Duflshuf'
-		// 	})
-		// });
-		// console.log(await res.text());
 	});
 
 	function messageRecieved(response: RealtimeResponseEvent<unknown>) {
 		const res: Models.Document = response.payload as Models.Document;
+		if (res.channels != currentChannelId) {
+			return;
+		}
 		messages.unshift(messageFromDoc(res));
 
 		const tempIndex = messages.findIndex((mes) => mes.type == MessageType.Temp);
@@ -374,13 +366,6 @@
 			onscroll={onMessagesScrolled}
 			bind:this={messagesContainer}
 		>
-			<!-- {#each messageGroups as group} -->
-			<!-- 	{#each group.messages as mes} -->
-			<!-- 		<p>{mes.content}</p> -->
-			<!-- 	{/each} -->
-			<!-- 	<h1>{group.username}</h1> -->
-			<!-- {/each} -->
-
 			{#each messageGroups as group}
 				<div class="flex w-full gap-2 p-2">
 					<img
@@ -486,9 +471,9 @@
 								alt="chevron"
 							/>
 							<a
-								class="w-full cursor-pointer rounded-md border-2 {channel.id == currentChannelId
-									? 'border-blue-400'
-									: ''} bg-slate-300/10 px-4 py-2 transition hover:border-blue-500 dark:text-white"
+								class="w-full cursor-pointer rounded-md {channel.id == currentChannelId
+									? 'border border-blue-400 hover:border-blue-500'
+									: ''} hover: bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
 								onclick={refreshChat}
 								href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a
 							>
