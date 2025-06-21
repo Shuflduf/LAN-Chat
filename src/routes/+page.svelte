@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
+	import Popup from '$lib/components/Popup.svelte';
 
 	import {
 		Avatars,
@@ -8,6 +9,7 @@
 		ID,
 		Query,
 		Storage,
+		type Models,
 		type RealtimeResponseEvent
 	} from 'appwrite';
 	import { onMount } from 'svelte';
@@ -18,6 +20,19 @@
 		User,
 		System,
 		Temp
+	}
+
+	class Channel {
+		id: string;
+		name: string;
+		password: string | null = null;
+
+		constructor(id: string, name: string, password: string | null = null) {
+			this.id = id;
+			this.name = name;
+
+			this.password = null;
+		}
 	}
 
 	class MessageGroup {
@@ -70,6 +85,9 @@
 	let currentAvatarPath: string | null = $state(null);
 	let currentAvatarId: string | null = $state(null);
 	let sidebarShown: boolean = $state(true);
+	let createChannelPopupShown: boolean = $state(false);
+	let savedChannels: Channel[] = $state([]);
+	let allChannels: Channel[] = $state([]);
 
 	let messageGroups: any[] = $derived(groupsFromMessages(messages));
 
@@ -85,7 +103,7 @@
 			event.preventDefault();
 			return;
 		}
-		if (username == '') {
+		if (username.trim() == '') {
 			alert('Please enter a username');
 			return;
 		}
@@ -118,27 +136,15 @@
 			Query.orderDesc('$createdAt'),
 			Query.limit(20)
 		]);
-		res.documents.forEach((doc) => {
-			messages.push(
-				new Message(
-					doc.content,
-					doc.username,
-					new Date(doc.$createdAt),
-					doc.$id,
-					MessageType.User,
-					doc.avatar_id
-				)
-			);
-		});
+		messages = res.documents.map(messageFromDoc);
 	}
 
-	onMount(async () => {
-		await getLatestMessages();
-		client.subscribe(
-			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
-			messageRecieved
-		);
+	async function getAllChannels() {
+		let res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID);
+		allChannels = res.documents.map((doc) => new Channel(doc.$id, doc.name, doc.password));
+	}
 
+	function loadSavedInfo() {
 		const avatarId = localStorage.getItem('avatarId');
 		if (avatarId != null) {
 			currentAvatarPath = formatAvatarURI(avatarId);
@@ -148,19 +154,40 @@
 		if (savedUsername != null) {
 			username = savedUsername;
 		}
+
+		const channels = localStorage.getItem('savedChannels');
+		if (channels == null) {
+			localStorage.setItem('savedChannels', JSON.stringify([env.PUBLIC_MAIN_CHANNEL_ID]));
+			savedChannels = [new Channel(env.PUBLIC_MAIN_CHANNEL_ID, 'Main')];
+		} else {
+			savedChannels = JSON.parse(channels);
+		}
+	}
+
+	onMount(async () => {
+		await getLatestMessages();
+		await getAllChannels();
+		client.subscribe(
+			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
+			messageRecieved
+		);
+		loadSavedInfo();
+
+		// const futureDate = new Date(Date.now() + 1000 * 60 * 60);
+		// const res = await fetch('/api/create_channel', {
+		// 	method: 'POST',
+		// 	body: JSON.stringify({
+		// 		channelName: 'gaeming',
+		// 		expiration: futureDate,
+		// 		password: 'Duflshuf'
+		// 	})
+		// });
+		// console.log(await res.text());
 	});
 
 	function messageRecieved(response: RealtimeResponseEvent<unknown>) {
-		const res: any = response.payload;
-		let newMessage = new Message(
-			res.content,
-			res.username,
-			new Date(res.$createdAt),
-			res.$id,
-			MessageType.User,
-			res.avatar_id
-		);
-		messages.unshift(newMessage);
+		const res: Models.Document = response.payload as Models.Document;
+		messages.unshift(messageFromDoc(res));
 
 		const tempIndex = messages.findIndex((mes) => mes.type == MessageType.Temp);
 		messages.splice(tempIndex, 1);
@@ -180,39 +207,42 @@
 			const scrollLoc = -messagesContainer.scrollTop + messagesContainer.clientHeight;
 			const difference = Math.abs(scrollLoc - messagesContainer.scrollHeight);
 			if (difference < 100) {
-				if (loadingMessages) {
-					return;
-				}
-				loadingMessages = true;
-				const lastMessage = messages.at(-1);
-				const lastMessageId = lastMessage?.id;
-				const res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
-					Query.limit(10),
-					lastMessageId ? Query.cursorBefore(lastMessageId) : ''
-				]);
-				if (res.documents.length == 0) {
-					messages.push(
-						new Message('No more messages!', 'SYSTEM', new Date(0), '0', MessageType.System)
-					);
-					return;
-				}
-				const newMessages = res.documents
-					.map(
-						(doc) =>
-							new Message(
-								doc.content,
-								doc.username,
-								new Date(doc.$createdAt),
-								doc.$id,
-								MessageType.User,
-								doc.avatar_id
-							)
-					)
-					.reverse();
-				messages = [...messages, ...newMessages];
-				loadingMessages = false;
+				await loadMoreMessages();
 			}
 		}
+	}
+
+	async function loadMoreMessages() {
+		if (loadingMessages) {
+			return;
+		}
+		loadingMessages = true;
+		const lastMessage = messages.at(-1);
+		const lastMessageId = lastMessage?.id;
+		const res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, [
+			Query.limit(10),
+			lastMessageId ? Query.cursorBefore(lastMessageId) : ''
+		]);
+		if (res.documents.length == 0) {
+			messages.push(
+				new Message('No more messages!', 'SYSTEM', new Date(0), '0', MessageType.System)
+			);
+			return;
+		}
+		const newMessages = res.documents.map(messageFromDoc).reverse();
+		messages = [...messages, ...newMessages];
+		loadingMessages = false;
+	}
+
+	function messageFromDoc(doc: Models.Document): Message {
+		return new Message(
+			doc.content,
+			doc.username,
+			new Date(doc.$createdAt),
+			doc.$id,
+			MessageType.User,
+			doc.avatar_id
+		);
 	}
 
 	async function onAvatarUploadStart() {
@@ -291,10 +321,60 @@
 		currentAvatarPath = null;
 	}
 
-	function toggleTheme() {
-		document.documentElement.classList.toggle('dark');
+	// function toggleTheme() {
+	// 	document.documentElement.classList.toggle('dark');
+	// }
+
+	function onCreateChannel() {
+		console.log('AAA');
+		createChannelPopupShown = true;
 	}
 </script>
+
+{#if createChannelPopupShown}
+	<Popup>
+		<div class="flex w-full flex-row items-start justify-between">
+			<h1 class="mb-4 text-3xl dark:text-white">Create Channel</h1>
+			<button onclick={() => (createChannelPopupShown = false)} class="cursor-pointer"
+				><img src="/assets/close.svg" alt="close" /></button
+			>
+		</div>
+		<form class="flex flex-col gap-4">
+			<label class="dark:text-white"
+				>Channel Name<span class="text-red-500">*</span>
+
+				<input
+					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
+				/>
+			</label>
+			<label class="dark:text-white" title="In how long will this channel be deleted">
+				Expiration Date<span class="text-red-500">*</span>
+				<select
+					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md"
+					required
+				>
+					<option class="text-black" value="1h">1 Hour</option>
+					<option class="text-black" value="4h">4 Hours</option>
+					<option class="text-black" value="4h">1 Day</option>
+					<option class="text-black" value="4h">1 Week</option>
+				</select>
+			</label>
+			<label class="dark:text-white">
+				Password
+				<input
+					type="password"
+					class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
+				/>
+			</label>
+			<input
+				type="submit"
+				value="Create Channel"
+				class="cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
+				onclick={() => (createChannelPopupShown = false)}
+			/>
+		</form>
+	</Popup>
+{/if}
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">
 	<div
@@ -409,19 +489,23 @@
 				>
 					<h1 class="text-center text-2xl dark:text-white">Channels</h1>
 
-					{#each Array(20)}
+					{#each allChannels as channel}
 						<div class="flex flex-row items-center gap-4">
 							<img
 								src="/assets/chevron_forward.svg"
 								class="size-6 brightness-0 dark:brightness-100"
 								alt="chevron"
 							/>
-							<button
+							<a
 								class="w-full cursor-pointer rounded-md border-2 border-blue-400 bg-slate-300/10 px-4 py-2 transition hover:border-blue-500 dark:text-white"
-								>Main</button
+								href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a
 							>
 						</div>
 					{/each}
+					<button
+						class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
+						onclick={onCreateChannel}>Create Channel</button
+					>
 				</div>
 			</div>
 		</section>
