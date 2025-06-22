@@ -120,7 +120,6 @@
 	const storage = new Storage(client);
 
 	function getCurrentChannel(): Channel | undefined {
-		console.log(savedChannels);
 		const channel = savedChannels.find((c) => c.id == currentChannelId);
 		return channel;
 	}
@@ -178,13 +177,12 @@
 			currentAvatarId,
 		);
 		messages.unshift(tempMessage);
-		let res = await databases.createDocument('main', '6854a930003cf54d6d93', ID.unique(), {
+		let res = await databases.createDocument('main', env.PUBLIC_MESSAGES_ID, ID.unique(), {
 			content: messageToSend,
 			username,
 			avatar_id: currentAvatarId,
 			channels: currentChannelId,
 		});
-		messages.unshift(messageFromDoc(res));
 		messages = messages.filter((m) => m.type != MessageType.Temp || m.id != tempMessage.id);
 	}
 
@@ -251,23 +249,20 @@
 	onMount(async () => {
 		// await getLatestMessages();
 		loadSavedInfo();
-		await getAllChannels();
-		await refreshChat();
 		client.subscribe(
 			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
 			messageRecieved,
 		);
+		await getAllChannels();
+		await refreshChat();
 	});
 
 	function messageRecieved(response: RealtimeResponseEvent<unknown>) {
 		const res: Models.Document = response.payload as Models.Document;
-		if (res.channels != currentChannelId) {
+		if (res.channels.$id != currentChannelId) {
 			return;
 		}
 		messages.unshift(messageFromDoc(res));
-
-		const tempIndex = messages.findIndex((mes) => mes.type == MessageType.Temp);
-		messages.splice(tempIndex, 1);
 	}
 
 	function formatDate(date: Date): string {
