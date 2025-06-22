@@ -62,13 +62,13 @@
 			>Channel Name<span class="text-red-500">*</span>
 
 			<input
-				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
+				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md backdrop-blur-xs transition focus:shadow-xl focus:outline-none dark:text-white"
 				bind:value={channelCreationName} />
 		</label>
 		<label class="dark:text-white" title="In how long will this channel be deleted">
 			Expiration Date<span class="text-red-500">*</span>
 			<select
-				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md"
+				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md backdrop-blur-xs"
 				required
 				bind:value={channelCreationExpiration}>
 				<option class="text-black" value="1h">1 Hour</option>
@@ -82,7 +82,7 @@
 			Password
 			<input
 				type="password"
-				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
+				class="ml-4 rounded-md border border-slate-500 bg-slate-300/10 px-4 py-2 shadow-md backdrop-blur-xs transition focus:shadow-xl focus:outline-none dark:text-white"
 				bind:value={channelCreationPassword} />
 		</label>
 		<input
