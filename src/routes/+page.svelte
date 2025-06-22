@@ -584,7 +584,7 @@
 		<form class="w-full p-4" onsubmit={submit}>
 			<input
 				class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
-				placeholder="Send Message"
+				placeholder="Send message to {getCurrentChannel()?.name}"
 				bind:value={newMessage}
 				bind:this={newMessageBox} />
 		</form>
@@ -599,7 +599,7 @@
 				<!-- 	onclick={toggleTheme}>Change Theme</button -->
 				<!-- > -->
 				<button
-					class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
+					class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
 					onclick={toggleSidebar}
 					><p>Hide Sidebar</p>
 					<img src="/assets/chevron_forward.svg" alt="chevron" />
@@ -611,7 +611,7 @@
 					<button
 						onclick={() => (profileCustomizationOpen = !profileCustomizationOpen)}
 						class="flex w-full cursor-pointer flex-row items-center justify-between">
-						<h1 class="text-2xl dark:text-white">Profile</h1>
+						<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Profile</h1>
 						<img src="/assets/chevron_forward.svg" alt="open menu" />
 					</button>
 					<!-- TODO: add toggle thing -->
@@ -625,14 +625,18 @@
 							{#if currentAvatarPath}
 								<img
 									src={currentAvatarPath}
-									class="rounded-md border border-slate-500 object-cover shadow-md"
+									class="aspect-square rounded-md border border-slate-500 object-cover shadow-md"
 									alt="current avatar"
 									title={currentAvatarId} />
 							{/if}
 							<div class="flex flex-row gap-4">
 								<button
-									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
-									onclick={() => avatarFilePicker?.click()}>Upload Avatar</button>
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
+									onclick={() => avatarFilePicker?.click()}>
+									<div class="flex flex-row justify-center gap-2">
+										<img src="/assets/person.svg" alt="person" />Upload Avatar
+									</div>
+								</button>
 								<input
 									type="file"
 									class="hidden"
@@ -641,8 +645,11 @@
 									bind:this={avatarFilePicker} />
 								{#if currentAvatarId}
 									<button
-										class="cursor-pointer rounded-md bg-red-500 px-4 py-2 text-white shadow-md transition hover:bg-red-600"
-										onclick={removeAvatar}>Remove</button>
+										class="w-full cursor-pointer rounded-md bg-red-500 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-red-600"
+										onclick={removeAvatar}
+										><div class="flex flex-row justify-center gap-2">
+											<img src="/assets/trash.svg" alt="trash" />Remove
+										</div></button>
 								{/if}
 							</div>
 						</div>
@@ -653,7 +660,7 @@
 					<button
 						onclick={() => (channelsMenuOpen = !channelsMenuOpen)}
 						class="flex w-full cursor-pointer flex-row items-center justify-between">
-						<h1 class="text-2xl dark:text-white">Channels</h1>
+						<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Channels</h1>
 						<img src="/assets/chevron_forward.svg" alt="open menu" />
 					</button>
 
@@ -662,24 +669,31 @@
 							{#each savedChannels as channel}
 								<div class="flex flex-row items-center gap-4">
 									<img
-										src="/assets/chevron_forward.svg"
+										src="/assets/tag.svg"
 										class="size-6 brightness-0 dark:brightness-100"
 										alt="chevron" />
 									<a
 										class="w-full cursor-pointer rounded-md {channel.id == currentChannelId
 											? 'border border-blue-400 hover:border-blue-500'
-											: ''} hover: bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
+											: ''} bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
 										onclick={() => refreshChat()}
 										href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a>
 								</div>
 							{/each}
 							<div class="flex w-full flex-row gap-4">
 								<button
-									class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
-									onclick={onCreateChannelOpen}>Create Channel</button>
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
+									onclick={onCreateChannelOpen}
+									><div class="flex flex-row justify-center gap-2">
+										<img src="/assets/add.svg" alt="add" />Create Channel
+									</div>
+								</button>
 								<button
-									class="shadmow-md w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 text-white backdrop-blur-xs transition hover:bg-blue-500"
-									onclick={onListChannelsOpen}>List Channels</button>
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
+									onclick={onListChannelsOpen}
+									><div class="flex flex-row justify-center gap-2">
+										<img src="/assets/list.svg" alt="add" />List Channels
+									</div></button>
 							</div>
 						</div>
 					{/if}
