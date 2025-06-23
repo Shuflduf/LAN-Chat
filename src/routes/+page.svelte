@@ -49,12 +49,17 @@
 	}
 
 	class MessageGroup {
-		messages: Message[];
+		messages: (Message | null)[];
 		username: string;
 		avatarId: string | null;
 		createdAt: Date;
 
-		constructor(messages: Message[], username: string, avatarId: string | null, createdAt: Date) {
+		constructor(
+			messages: (Message | null)[],
+			username: string,
+			avatarId: string | null,
+			createdAt: Date,
+		) {
 			this.messages = messages;
 			this.username = username;
 			this.avatarId = avatarId;
@@ -118,6 +123,13 @@
 
 			this.type = type;
 			this.avatarId = avatarId;
+		}
+
+		mediaFiles(): MessageFile[] {
+			return this.files.filter((f) => f.isImage() || f.isVideo());
+		}
+		notMediaFiles(): MessageFile[] {
+			return this.files.filter((f) => !f.isImage() && !f.isVideo());
 		}
 	}
 
@@ -190,7 +202,9 @@
 		if (res.channels.$id != currentChannelId) {
 			return;
 		}
-		messages.unshift(await messageFromDoc(res));
+		const mes = await messageFromDoc(res);
+		console.log(mes);
+		messages.unshift(mes);
 	}
 
 	async function refreshChat() {
@@ -233,7 +247,6 @@
 		);
 		messages.unshift(tempMessage);
 		let ids = await uploadMessageFiles(filesToUpload);
-		console.log('id:', ids);
 		const res = await databases.createDocument('main', env.PUBLIC_MESSAGES_ID, ID.unique(), {
 			content: messageToSend,
 			username,
@@ -241,7 +254,6 @@
 			channels: currentChannelId,
 			files: ids,
 		});
-		console.log('res:', res);
 		messages = messages.filter((m) => m.type != MessageType.Temp || m.id != tempMessage.id);
 	}
 
@@ -378,11 +390,9 @@
 		for (const file of doc.files) {
 			const res = await storage.getFile('message_files', file);
 			const mfile = new MessageFile(res.name, res.$id, res.mimeType, res.sizeOriginal);
-			console.log(mfile);
 			messageFiles.push(mfile);
 		}
-		console.log(doc);
-		return new Message(
+		const mes = new Message(
 			doc.content,
 			doc.username,
 			new Date(doc.$createdAt),
@@ -391,6 +401,7 @@
 			doc.avatar_id,
 			messageFiles,
 		);
+		return mes;
 	}
 
 	async function onAvatarUploadStart() {
@@ -422,7 +433,7 @@
 			return [];
 		}
 		let groups: MessageGroup[] = [];
-		let currentGroup: Message[] = [];
+		let currentGroup: (Message | null)[] = [];
 		for (let index = 0; index < tmpMessages.length; index++) {
 			const mes = tmpMessages[index];
 			if (currentGroup.length == 0) {
@@ -438,6 +449,9 @@
 			const tmpCreatedAt = tmpLatest.createdAt;
 
 			if (mes.avatarId == tmpAvatarId && mes.username == tmpUsername) {
+				if (mes.files.length > 0) {
+					currentGroup.push(null);
+				}
 				currentGroup.push(mes);
 			} else {
 				const newMessageGroup = new MessageGroup(
@@ -451,12 +465,13 @@
 				currentGroup.push(mes);
 			}
 		}
+		const safeGroup = currentGroup as Message[];
 		groups.push(
 			new MessageGroup(
 				currentGroup,
-				currentGroup[0].username,
-				currentGroup[0].avatarId,
-				currentGroup[0].createdAt,
+				safeGroup[0].username,
+				safeGroup[0].avatarId,
+				safeGroup[0].createdAt,
 			),
 		);
 		return groups;
@@ -579,7 +594,6 @@
 				}
 			}
 		}
-		console.log(messageFiles);
 	}
 
 	function removeMessageFile(file: File) {
@@ -667,15 +681,17 @@
 							<span dir="ltr">{formatDate(group.createdAt)}</span>
 						</p>
 						{#each group.messages.reverse() as message}
-							<p
-								class={message.type == MessageType.Temp ? 'text-gray-400' : 'dark:text-white'}
-								title={message.id}>
-								{message.content}
-							</p>
-							{#if message.files.length > 0}
-								<div class="flex w-fit flex-row flex-wrap items-start gap-4">
-									{#each message.files as file}
-										<div class="rounded-md">
+							{#if message == null}
+								<hr class="m-4 border-dotted text-slate-500" />
+							{:else}
+								<p
+									class={message.type == MessageType.Temp ? 'text-gray-400' : 'dark:text-white'}
+									title={message.id}>
+									{message.content}
+								</p>
+								{#if message.files.length > 0}
+									<div class="mt-2 flex w-fit flex-row flex-wrap items-start gap-4 rounded-md">
+										{#each message.mediaFiles() as file}
 											{#if file.isImage()}
 												<img
 													src={file.formatURL()}
@@ -685,7 +701,13 @@
 											{:else if file.isVideo()}
 												<video src={file.formatURL()} title={file.id} controls class="max-w-96"
 													><track kind="captions" /></video>
-											{:else}
+											{/if}
+										{/each}
+										{#if message.mediaFiles().length > 0 && message.notMediaFiles().length > 0}
+											<br />
+										{/if}
+										<div class="flex w-fit flex-row flex-wrap items-start gap-4 rounded-md">
+											{#each message.notMediaFiles() as file}
 												<a href={file.downloadURL()}>
 													<button
 														class="h-16 cursor-pointer rounded-md border border-slate-500 bg-slate-300/10 shadow-md hover:shadow-lg">
@@ -698,10 +720,10 @@
 														</div>
 													</button>
 												</a>
-											{/if}
+											{/each}
 										</div>
-									{/each}
-								</div>
+									</div>
+								{/if}
 							{/if}
 						{/each}
 					</div>
@@ -747,7 +769,7 @@
 				<!-- 	onclick={toggleTheme}>Change Theme</button -->
 				<!-- > -->
 				<button
-					class="flex cursor-pointer flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
+					class="flex cursor-pointer flex-row gap-2 rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
 					onclick={toggleSidebar}
 					><p>Hide Sidebar</p>
 					<img src="/assets/chevron_forward.svg" alt="chevron" />
