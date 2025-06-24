@@ -259,52 +259,54 @@
 						{#if message == null}
 							<hr class="m-4 border-dotted text-slate-500" />
 						{:else}
-							<p
-								class="{message.type == MessageType.Temp
-									? 'text-gray-400'
-									: 'dark:!text-white'} prose prose-slate dark:prose-invert"
-								title={message.id}>
-								{@html message.renderedMarkdown}
-							</p>
-							{#if message.files.length > 0}
-								<div class="mt-2 flex w-fit flex-row flex-wrap items-start gap-4 rounded-md">
-									{#each message.mediaFiles() as file}
-										{#if file.isImage()}
-											<img
-												src={file.formatURL()}
-												alt={file.name}
-												title={file.id}
-												class="max-w-64 rounded-md shadow-md transition hover:shadow-lg" />
-										{:else if file.isVideo()}
-											<video
-												src={file.formatURL()}
-												title={file.id}
-												controls
-												class="max-w-96 rounded-md shadow-md transition hover:shadow-lg"
-												><track kind="captions" /></video>
-										{/if}
-									{/each}
-									{#if message.mediaFiles().length > 0 && message.notMediaFiles().length > 0}
-										<br />
-									{/if}
-									<div class="flex w-fit flex-row flex-wrap items-start gap-4 rounded-md">
-										{#each message.notMediaFiles() as file}
-											<a href={file.downloadURL()}>
-												<button
-													class="h-16 cursor-pointer rounded-md border border-slate-500 bg-slate-300/10 shadow-md hover:shadow-lg">
-													<div class="flex flex-row justify-between gap-4 px-4">
-														<div>
-															<p class="font-[Arvo] italic dark:text-white">{file.name}</p>
-															<p class="text-sm text-gray-400">{formatBytes(file.size)}</p>
-														</div>
-														<img src="/assets/download.svg" alt="download" />
-													</div>
-												</button>
-											</a>
+							<div class="rounded-md transition hover:backdrop-invert-[0.02]">
+								<p
+									class="{message.type == MessageType.Temp
+										? 'text-gray-400'
+										: 'dark:!text-white'} prose prose-slate dark:prose-invert"
+									title={message.id}>
+									{@html message.renderedMarkdown}
+								</p>
+								{#if message.files.length > 0}
+									<div class="mt-2 flex w-fit flex-row flex-wrap items-start gap-4 rounded-md">
+										{#each message.mediaFiles() as file}
+											{#if file.isImage()}
+												<img
+													src={file.formatURL()}
+													alt={file.name}
+													title={file.id}
+													class="max-w-64 rounded-md shadow-md transition hover:shadow-lg" />
+											{:else if file.isVideo()}
+												<video
+													src={file.formatURL()}
+													title={file.id}
+													controls
+													class="max-w-96 rounded-md shadow-md transition hover:shadow-lg"
+													><track kind="captions" /></video>
+											{/if}
 										{/each}
+										{#if message.mediaFiles().length > 0 && message.notMediaFiles().length > 0}
+											<br />
+										{/if}
+										<div class="flex w-fit flex-row flex-wrap items-start gap-4 rounded-md">
+											{#each message.notMediaFiles() as file}
+												<a href={file.downloadURL()}>
+													<button
+														class="h-16 cursor-pointer rounded-md border border-slate-500 bg-slate-300/10 shadow-md hover:shadow-lg">
+														<div class="flex flex-row justify-between gap-4 px-4">
+															<div>
+																<p class="font-[Arvo] italic dark:text-white">{file.name}</p>
+																<p class="text-sm text-gray-400">{formatBytes(file.size)}</p>
+															</div>
+															<img src="/assets/download.svg" alt="download" />
+														</div>
+													</button>
+												</a>
+											{/each}
+										</div>
 									</div>
-								</div>
-							{/if}
+								{/if}
+							</div>
 						{/if}
 					{/each}
 				</div>
