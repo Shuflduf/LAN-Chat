@@ -93,7 +93,8 @@
 		await getAllChannels();
 		const channel = new Channel(doc.$id, doc.name, doc.expiration, doc.password, pass);
 		// savedChannels.push(channel);
-		saveChannel(channel);
+		await saveChannel(channel);
+		console.log(await getSavedChannels());
 		savedChannels = await getSavedChannels();
 	}
 
@@ -216,7 +217,7 @@
 									class="w-full cursor-pointer rounded-md {channel.id == getCurrentChannelId()
 										? 'border border-blue-400 hover:border-blue-500'
 										: ''} bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
-									onclick={() => refreshChat()}
+									onclick={refreshChat}
 									href="?{new URLSearchParams({ c: channel.id }).toString()}">
 									{channel.name}
 								</a>

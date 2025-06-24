@@ -20,7 +20,10 @@
 	let currentAvatarId: string | null = $state(null);
 	let messageFiles: File[] = $state([]);
 
-	let { droppedFiles }: { droppedFiles: Writable<File[]> } = $props();
+	let {
+		droppedFiles,
+		currentChannelName,
+	}: { droppedFiles: Writable<File[]>; currentChannelName: string } = $props();
 
 	onMount(() => {
 		const avatarId = localStorage.getItem('avatarId');
@@ -152,7 +155,7 @@
 	<input
 		onpaste={pasteMessageFiles}
 		class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
-		placeholder="Send message to {getCurrentChannel()?.name}"
+		placeholder="Send message to {currentChannelName}"
 		bind:value={newMessage}
 		bind:this={newMessageBox} />
 </form>

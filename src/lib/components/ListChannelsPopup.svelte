@@ -4,6 +4,7 @@
 		Channel,
 		databases,
 		getAllChannels,
+		getCurrentChannelId,
 		getSavedChannels,
 		isChannelSaved,
 		saveChannel,
@@ -35,13 +36,18 @@
 
 	async function toggleChannel(channel: Channel) {
 		if (channel.id == env.PUBLIC_MAIN_CHANNEL_ID) {
-			return alert("Can't remove Main channel");
+			alert("Can't remove Main channel");
+			return;
+		}
+		if (channel.name.startsWith('Net')) {
+			alert("Can't remove network channel");
+			return;
 		}
 		if (await isChannelSaved(channel)) {
 			unsaveChannel(channel);
-			// if (currentChannelId == channel.id) {
-			// 	refreshChat();
-			// } TODO:
+			if (getCurrentChannelId() == channel.id) {
+				window.location.replace('/');
+			}
 		} else {
 			if (channel.password) {
 				passwordPromptShown = true;

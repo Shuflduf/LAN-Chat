@@ -2,6 +2,7 @@
 	import { env } from '$env/dynamic/public';
 	import {
 		avatars,
+		Channel,
 		client,
 		formatAvatarURI,
 		formatBytes,
@@ -28,6 +29,7 @@
 	let loadingMessages: boolean = $state(false);
 	let messageGroups: any[] = $derived(groupsFromMessages(messages));
 	let droppedFiles: Writable<File[]> = $state(writable([]));
+	let currentChannelName: string = $state('');
 
 	onMount(async () => {
 		client.subscribe(
@@ -75,15 +77,17 @@
 	}
 
 	async function getLatestMessages() {
-		if (!getCurrentChannel()) {
+		const currentChannel = await getCurrentChannel();
+		if (!currentChannel) {
 			alert('Channel not found in saved channels');
 			window.location.replace('/');
 		}
+		currentChannelName = (currentChannel as Channel).name;
 		const res = await fetch('/api/get_messages', {
 			method: 'POST',
 			body: JSON.stringify({
 				id: getCurrentChannelId(),
-				password: getCurrentChannel()?.savedPassword,
+				password: currentChannel?.savedPassword,
 			}),
 		});
 		const json = JSON.parse(await res.text());
@@ -92,6 +96,7 @@
 			return;
 		}
 		const docs: Models.Document[] = json;
+		console.log(docs);
 		messages = await Promise.all(docs.map(messageFromDoc));
 	}
 
@@ -287,5 +292,5 @@
 		{/each}
 	</div>
 	<!-- // message input -->
-	<MessageInput {droppedFiles}></MessageInput>
+	<MessageInput {droppedFiles} {currentChannelName}></MessageInput>
 </div>

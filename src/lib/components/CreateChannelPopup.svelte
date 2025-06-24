@@ -24,6 +24,10 @@
 			alert('Channel name taken');
 			return;
 		}
+		if (channelCreationName.startsWith('Net')) {
+			alert('Channel names starting with "Net" are not allowed');
+			return;
+		}
 
 		const min = 1000 * 60;
 		const hour = min * 60;
