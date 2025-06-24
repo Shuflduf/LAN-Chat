@@ -7,6 +7,7 @@
 		getAvatarId,
 		getCurrentChannelId,
 		getSavedChannels,
+		getUsername,
 		saveChannel,
 		storage,
 	} from '$lib';
@@ -24,7 +25,7 @@
 	let createChannelPopupShown: boolean = $state(false);
 	let profileCustomizationOpen: boolean = $state(true);
 	let channelsMenuOpen: boolean = $state(true);
-	let username: string = $state('');
+	let username: string = $state(getUsername());
 	let currentAvatarPath: string | null = $state(null);
 	let allChannels: Channel[] = $state([]);
 	let savedChannels: Channel[] = $state(getSavedChannels());

@@ -2,6 +2,7 @@
 	import { env } from '$env/dynamic/public';
 	import {
 		databases,
+		getAvatarId,
 		getCurrentChannel,
 		getCurrentChannelId,
 		getUsername,
@@ -98,10 +99,10 @@
 		);
 		// messages.unshift(tempMessage);
 		let ids = await uploadMessageFiles(filesToUpload);
-		const res = await databases.createDocument('main', env.PUBLIC_MESSAGES_ID, ID.unique(), {
+		await databases.createDocument('main', env.PUBLIC_MESSAGES_ID, ID.unique(), {
 			content: messageToSend,
 			username: getUsername(),
-			avatar_id: currentAvatarId,
+			avatar_id: getAvatarId(),
 			channels: getCurrentChannelId(),
 			files: ids,
 		});

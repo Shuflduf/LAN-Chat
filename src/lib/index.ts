@@ -189,7 +189,9 @@ export function getCurrentChannelId(): string {
 }
 
 export function getUsername(): string {
-  const username = localStorage.getItem("username")
+  const ls = safeLocalStorage()
+  if (!ls) return ""
+  const username = ls.getItem("username")
   return username ? username : ""
 }
 
