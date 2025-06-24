@@ -31,6 +31,5 @@ export const POST = async ({ request }) => {
   }
 
   let res = await databases.listDocuments('main', env.PUBLIC_MESSAGES_ID, queries);
-  console.log(res.documents)
   return new Response(JSON.stringify(res.documents));
 };
