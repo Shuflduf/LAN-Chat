@@ -1,38 +1,23 @@
-# sv
+# Shufl-Chat
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A modern, real-time chat application built with Svelte and TypeScript.
 
-## Creating a project
+![Shufl-Chat Logo](.static/assets/shuflduf_logo.png)
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Features
 
-```bash
-# create a new project in the current directory
-npx sv create
+- **Real-time Messaging**: Instantly connect with friends and colleagues
+- **User Customization**: Customizable user profiles with avatars and username
+- **Message History**: Access your conversation history anytime
+- **Group Chats**: Create and manage private group conversations through password-locked channels
+- **File Sharing**: Share documents, images, and other files
+- **Mobile Responsive**: Seamless experience across all devices
+- **Dark/Light Theme**: Website theme reacts to your device responsively
 
-# create a new project in my-app
-npx sv create my-app
-```
+## License
 
-## Developing
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Contact
 
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- Bluesky: [@shuflduf.xyz](https://bsky.app/profile/shuflduf.xyz) - shuflduf@shuflduf.xyz
