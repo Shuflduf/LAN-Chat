@@ -36,8 +36,11 @@
 			`databases.main.collections.${env.PUBLIC_MESSAGES_ID}.documents`,
 			messageRecieved,
 		);
-		await refreshChat();
-		update.subscribe(async () => await refreshChat());
+		update.subscribe(async (id) => {
+			if (id != undefined) {
+				await refreshChat();
+			}
+		});
 	});
 
 	async function messageRecieved(response: RealtimeResponseEvent<unknown>) {
@@ -47,6 +50,11 @@
 			return;
 		}
 		const mes = await messageFromDoc(res);
+		messages = messages.filter((m) => m.id != mes.id);
+		messages.unshift(mes);
+	}
+
+	function addTempMessage(mes: Message) {
 		messages.unshift(mes);
 	}
 
@@ -66,13 +74,13 @@
 			doc.avatar_id,
 			messageFiles,
 		);
+		await mes.renderMarkdown();
 		return mes;
 	}
 	async function refreshChat() {
 		await new Promise((r) => setTimeout(r, 100));
 
 		messages = [];
-		// await handleSelfDestruct();
 		await getLatestMessages();
 	}
 
@@ -189,9 +197,17 @@
 		const newMessages = await Promise.all(docs.map(messageFromDoc));
 
 		if (newMessages.length == 0) {
-			messages.push(
-				new Message('No more messages!', 'SYSTEM', new Date(0), '0', MessageType.System, null, []),
+			const sysMessage = new Message(
+				'No more messages!',
+				'SYSTEM',
+				new Date(0),
+				'0',
+				MessageType.System,
+				null,
+				[],
 			);
+			sysMessage.renderedMarkdown = sysMessage.content;
+			messages.push(sysMessage);
 			loadingMessages = false;
 			return;
 		}
@@ -214,7 +230,7 @@
 	role="region"
 	ondragover={(e) => e.preventDefault()}
 	class="mb-8 flex w-full max-w-4xl flex-col rounded-md border border-slate-500 bg-slate-300/10
-	shadow-md backdrop-blur-xs md:mb-0">
+	shadow-md backdrop-blur-xs transition hover:shadow-lg md:mb-0">
 	<div
 		class="flex h-full flex-col-reverse overflow-y-auto p-2"
 		onscroll={onMessagesScrolled}
@@ -225,11 +241,11 @@
 					src={group.avatarId
 						? formatAvatarURI(group.avatarId)
 						: avatars.getInitials(group.username)}
-					class="h-8 w-8 rounded-md object-cover shadow-md"
+					class="h-8 w-8 rounded-md object-cover shadow-md transition hover:shadow-lg"
 					title={group.avatarId}
 					alt="avatar of {group.username}" />
 				<div
-					class="w-full rounded-md border bg-slate-300/10 p-4 shadow-md backdrop-blur-xs {group
+					class="w-full rounded-md border bg-slate-300/10 p-4 shadow-md backdrop-blur-xs transition hover:shadow-lg {group
 						.messages[0].type == MessageType.System
 						? 'border-red-500'
 						: 'border-slate-500 '}">
@@ -243,9 +259,11 @@
 							<hr class="m-4 border-dotted text-slate-500" />
 						{:else}
 							<p
-								class={message.type == MessageType.Temp ? 'text-gray-400' : 'dark:text-white'}
+								class="{message.type == MessageType.Temp
+									? 'text-gray-400'
+									: 'dark:!text-white'} prose prose-slate dark:prose-invert"
 								title={message.id}>
-								{message.content}
+								{@html message.renderedMarkdown}
 							</p>
 							{#if message.files.length > 0}
 								<div class="mt-2 flex w-fit flex-row flex-wrap items-start gap-4 rounded-md">
@@ -255,13 +273,14 @@
 												src={file.formatURL()}
 												alt={file.name}
 												title={file.id}
-												class="max-w-64" />
+												class="max-w-64 rounded-md shadow-md transition hover:shadow-lg" />
 										{:else if file.isVideo()}
 											<video
 												src={file.formatURL()}
 												title={file.id}
 												controls
-												class="max-w-96 rounded-md"><track kind="captions" /></video>
+												class="max-w-96 rounded-md shadow-md transition hover:shadow-lg"
+												><track kind="captions" /></video>
 										{/if}
 									{/each}
 									{#if message.mediaFiles().length > 0 && message.notMediaFiles().length > 0}
@@ -292,5 +311,5 @@
 		{/each}
 	</div>
 	<!-- // message input -->
-	<MessageInput {droppedFiles} {currentChannelName}></MessageInput>
+	<MessageInput {droppedFiles} {currentChannelName} {addTempMessage}></MessageInput>
 </div>

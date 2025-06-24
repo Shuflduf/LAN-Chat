@@ -23,7 +23,12 @@
 	let {
 		droppedFiles,
 		currentChannelName,
-	}: { droppedFiles: Writable<File[]>; currentChannelName: string } = $props();
+		addTempMessage,
+	}: {
+		droppedFiles: Writable<File[]>;
+		currentChannelName: string;
+		addTempMessage: (mes: Message) => void;
+	} = $props();
 
 	onMount(() => {
 		const avatarId = localStorage.getItem('avatarId');
@@ -108,18 +113,19 @@
 		const filesToUpload = messageFiles;
 		messageFiles = [];
 
+		const id = ID.unique();
 		const tempMessage = new Message(
 			messageToSend,
 			getUsername(),
 			new Date(),
-			ID.unique(),
+			id,
 			MessageType.Temp,
-			currentAvatarId,
-			[], // TODO:
+			getAvatarId(),
+			[],
 		);
-		// messages.unshift(tempMessage);
+		addTempMessage(tempMessage);
 		let ids = await uploadMessageFiles(filesToUpload);
-		await databases.createDocument('main', env.PUBLIC_MESSAGES_ID, ID.unique(), {
+		await databases.createDocument('main', env.PUBLIC_MESSAGES_ID, id, {
 			content: messageToSend,
 			username: getUsername(),
 			avatar_id: getAvatarId(),
@@ -148,13 +154,13 @@
 		onchange={onMessageFilesAdded} />
 	<button
 		type="button"
-		class="rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md"
+		class="cursor-pointer rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition hover:shadow-lg"
 		onclick={() => messageFilePicker?.click()}>
 		<img src="/assets/add.svg" alt="plus" class="brightness-0 dark:brightness-100" />
 	</button>
 	<input
 		onpaste={pasteMessageFiles}
-		class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:shadow-xl focus:outline-none dark:text-white"
+		class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition hover:shadow-lg focus:shadow-xl focus:outline-none dark:text-white"
 		placeholder="Send message to {currentChannelName}"
 		bind:value={newMessage}
 		bind:this={newMessageBox} />

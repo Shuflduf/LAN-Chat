@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Channel, getCurrentChannel } from '$lib';
+	import { getCurrentChannel } from '$lib';
 	import Chatbox from '$lib/components/Chatbox.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { onMount } from 'svelte';
@@ -22,7 +22,6 @@
 	});
 </script>
 
-<!-- PAGE -->
 <title>{title}</title>
 
 <main class="fixed flex h-screen w-screen flex-row justify-center gap-4 p-4">

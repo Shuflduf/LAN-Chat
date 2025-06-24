@@ -13,7 +13,7 @@
 		storage,
 		unsaveChannel,
 	} from '$lib';
-	import { ID, type Models } from 'appwrite';
+	import { ID, Query, type Models } from 'appwrite';
 	import { fly, slide } from 'svelte/transition';
 	import ListChannelsPopup from './ListChannelsPopup.svelte';
 	import { quadOut } from 'svelte/easing';
@@ -99,7 +99,10 @@
 	}
 
 	async function getAllChannels() {
-		let res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID);
+		let res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID, [
+			Query.select(['name', 'expiration', 'password']),
+			Query.limit(100),
+		]);
 		allChannels = res.documents.map(
 			(doc) => new Channel(doc.$id, doc.name, new Date(doc.expiration), doc.password),
 		);
@@ -132,14 +135,14 @@
 		class="sidebar-min fixed right-4 ml-4 h-[calc(100%-2rem)] max-w-md md:static md:m-0 md:ml-0 md:h-full md:min-w-md">
 		<section
 			transition:fly={{ duration: 200, x: 100, easing: quadOut }}
-			class="bg-funny flex h-full w-full flex-col gap-4 rounded-md border border-slate-500 bg-white p-4 shadow-md backdrop-blur-lg md:backdrop-blur-xs dark:bg-slate-300/10">
+			class="bg-funny flex h-full w-full flex-col gap-4 rounded-md border border-slate-500 bg-white p-4 shadow-md backdrop-blur-lg transition hover:shadow-lg md:backdrop-blur-xs dark:bg-slate-300/10">
 			<div class="flex w-full flex-row justify-end gap-4">
 				<!-- <button -->
 				<!-- 	class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500" -->
 				<!-- 	onclick={toggleTheme}>Change Theme</button -->
 				<!-- > -->
 				<button
-					class="flex cursor-pointer flex-row gap-2 rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
+					class="flex cursor-pointer flex-row gap-2 rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500 hover:shadow-lg"
 					onclick={toggleSidebar}>
 					<p>Hide Sidebar</p>
 					<img src="/assets/chevron_forward.svg" alt="chevron" />
@@ -147,7 +150,7 @@
 			</div>
 			<div class="flex flex-col gap-4 overflow-y-auto">
 				<div
-					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
+					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs transition hover:shadow-lg">
 					<button
 						onclick={() => (profileCustomizationOpen = !profileCustomizationOpen)}
 						class="flex w-full cursor-pointer flex-row items-center justify-between">
@@ -163,19 +166,19 @@
 								{#if currentAvatarPath}
 									<img
 										src={currentAvatarPath}
-										class="aspect-square rounded-md border border-slate-500 object-cover shadow-md"
+										class="aspect-square rounded-md border border-slate-500 object-cover shadow-md transition hover:shadow-lg"
 										alt="current avatar"
 										title={getAvatarId()} />
 								{/if}
 								<input
-									class="focus_shadow-xl w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
+									class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition hover:shadow-lg focus:shadow-xl focus:outline-none dark:text-white"
 									placeholder="Username"
 									bind:value={username}
 									onchange={saveUsername} />
 							</div>
 							<div class="flex flex-row gap-4">
 								<button
-									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500 hover:shadow-lg"
 									onclick={() => avatarFilePicker?.click()}>
 									<div class="flex flex-row justify-center gap-2">
 										<img src="/assets/person.svg" alt="person" />
@@ -190,7 +193,7 @@
 									bind:this={avatarFilePicker} />
 								{#if currentAvatarPath}
 									<button
-										class="w-full cursor-pointer rounded-md bg-red-500 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-red-600"
+										class="w-full cursor-pointer rounded-md bg-red-500 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-red-600 hover:shadow-lg"
 										onclick={removeAvatar}>
 										<div class="flex flex-row justify-center gap-2">
 											<img src="/assets/trash.svg" alt="trash" />
@@ -203,7 +206,7 @@
 					{/if}
 				</div>
 				<div
-					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
+					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs transition hover:shadow-lg">
 					<button
 						onclick={() => (channelsMenuOpen = !channelsMenuOpen)}
 						class="flex w-full cursor-pointer flex-row items-center justify-between">
@@ -224,7 +227,7 @@
 									<a
 										class="w-full cursor-pointer rounded-md {channel.id == getCurrentChannelId()
 											? 'border border-blue-400 hover:border-blue-500'
-											: 'border border-slate-300 dark:border-none'} bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
+											: 'border border-slate-300 dark:border-none'} bg-slate-300/10 px-4 py-2 shadow-md transition hover:bg-slate-400/10 hover:shadow-lg dark:text-white"
 										onclick={refreshChat}
 										href="?{new URLSearchParams({ c: channel.id }).toString()}">
 										{channel.name}
@@ -233,7 +236,7 @@
 							{/each}
 							<div class="mt-2 flex w-full flex-row gap-4">
 								<button
-									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500 hover:shadow-lg"
 									onclick={onCreateChannelOpen}>
 									<div class="flex flex-row justify-center gap-2">
 										<img src="/assets/add.svg" alt="add" />
@@ -241,7 +244,7 @@
 									</div>
 								</button>
 								<button
-									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500 hover:shadow-lg"
 									onclick={() => (listChannelsPopupShown = true)}>
 									<div class="flex flex-row justify-center gap-2">
 										<img src="/assets/list.svg" alt="add" />
@@ -257,7 +260,7 @@
 	</div>
 {:else}
 	<button
-		class="fixed top-8 right-8 flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
+		class="fixed top-8 right-8 flex cursor-pointer flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500 hover:shadow-lg"
 		onclick={toggleSidebar}>
 		<img src="/assets/chevron_forward.svg" class="rotate-180" alt="open sidebar" />
 	</button>
