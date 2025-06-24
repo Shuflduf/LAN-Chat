@@ -126,126 +126,129 @@
 	<CreateChannelPopup onClose={() => (createChannelPopupShown = false)} {onChannelCreate}>
 	</CreateChannelPopup>
 {/if}
+
 {#if sidebarShown}
-	<section
-		transition:fly={{ duration: 200, x: 100, easing: quadOut }}
-		class="fixed flex h-full flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xl md:static md:w-lg md:backdrop-blur-xs">
-		<div class="flex w-full flex-row justify-end gap-4">
-			<!-- <button -->
-			<!-- 	class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500" -->
-			<!-- 	onclick={toggleTheme}>Change Theme</button -->
-			<!-- > -->
-			<button
-				class="flex cursor-pointer flex-row gap-2 rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
-				onclick={toggleSidebar}>
-				<p>Hide Sidebar</p>
-				<img src="/assets/chevron_forward.svg" alt="chevron" />
-			</button>
-		</div>
-		<div class="flex flex-col gap-4 overflow-y-auto">
-			<div
-				class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
+	<div
+		class="min-w-[min(100%, 768px)] fixed right-4 ml-4 h-[calc(100%-2rem)] md:static md:m-0 md:ml-0 md:h-full md:min-w-md">
+		<section
+			transition:fly={{ duration: 200, x: 100, easing: quadOut }}
+			class="flex h-full w-full flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xl md:backdrop-blur-xs">
+			<div class="flex w-full flex-row justify-end gap-4">
+				<!-- <button -->
+				<!-- 	class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500" -->
+				<!-- 	onclick={toggleTheme}>Change Theme</button -->
+				<!-- > -->
 				<button
-					onclick={() => (profileCustomizationOpen = !profileCustomizationOpen)}
-					class="flex w-full cursor-pointer flex-row items-center justify-between">
-					<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Profile</h1>
-					<img src="/assets/chevron_forward.svg" alt="open menu" />
+					class="flex cursor-pointer flex-row gap-2 rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
+					onclick={toggleSidebar}>
+					<p>Hide Sidebar</p>
+					<img src="/assets/chevron_forward.svg" alt="chevron" />
 				</button>
-				{#if profileCustomizationOpen}
-					<div class="flex flex-col gap-4" transition:slide={{ axis: 'y', duration: 200 }}>
-						<div class="flex h-12 w-full flex-row gap-2">
-							{#if currentAvatarPath}
-								<img
-									src={currentAvatarPath}
-									class="aspect-square rounded-md border border-slate-500 object-cover shadow-md"
-									alt="current avatar"
-									title={getAvatarId()} />
-							{/if}
-							<input
-								class="focus_shadow-xl w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
-								placeholder="Username"
-								bind:value={username}
-								onchange={saveUsername} />
-						</div>
-						<div class="flex flex-row gap-4">
-							<button
-								class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
-								onclick={() => avatarFilePicker?.click()}>
-								<div class="flex flex-row justify-center gap-2">
-									<img src="/assets/person.svg" alt="person" />
-									<p>Upload Avatar</p>
-								</div>
-							</button>
-							<input
-								type="file"
-								class="hidden"
-								accept="image/png, image/jpeg, image/webp"
-								onchange={onAvatarUploadStart}
-								bind:this={avatarFilePicker} />
-							{#if currentAvatarPath}
+			</div>
+			<div class="flex flex-col gap-4 overflow-y-auto">
+				<div
+					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
+					<button
+						onclick={() => (profileCustomizationOpen = !profileCustomizationOpen)}
+						class="flex w-full cursor-pointer flex-row items-center justify-between">
+						<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Profile</h1>
+						<img src="/assets/chevron_forward.svg" alt="open menu" />
+					</button>
+					{#if profileCustomizationOpen}
+						<div class="flex flex-col gap-4" transition:slide={{ axis: 'y', duration: 200 }}>
+							<div class="flex h-12 w-full flex-row gap-2">
+								{#if currentAvatarPath}
+									<img
+										src={currentAvatarPath}
+										class="aspect-square rounded-md border border-slate-500 object-cover shadow-md"
+										alt="current avatar"
+										title={getAvatarId()} />
+								{/if}
+								<input
+									class="focus_shadow-xl w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition focus:outline-none dark:text-white"
+									placeholder="Username"
+									bind:value={username}
+									onchange={saveUsername} />
+							</div>
+							<div class="flex flex-row gap-4">
 								<button
-									class="w-full cursor-pointer rounded-md bg-red-500 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-red-600"
-									onclick={removeAvatar}>
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
+									onclick={() => avatarFilePicker?.click()}>
 									<div class="flex flex-row justify-center gap-2">
-										<img src="/assets/trash.svg" alt="trash" />
-										<p>Remove</p>
+										<img src="/assets/person.svg" alt="person" />
+										<p>Upload Avatar</p>
 									</div>
 								</button>
-							{/if}
-						</div>
-					</div>
-				{/if}
-			</div>
-			<div
-				class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
-				<button
-					onclick={() => (channelsMenuOpen = !channelsMenuOpen)}
-					class="flex w-full cursor-pointer flex-row items-center justify-between">
-					<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Channels</h1>
-					<img src="/assets/chevron_forward.svg" alt="open menu" />
-				</button>
-
-				{#if channelsMenuOpen}
-					<div class="flex flex-col gap-2" transition:slide={{ axis: 'y', duration: 200 }}>
-						{#each savedChannels as channel}
-							<div class="flex flex-row items-center gap-4">
-								<img
-									src="/assets/tag.svg"
-									class="size-6 brightness-0 dark:brightness-100"
-									alt="chevron" />
-								<a
-									class="w-full cursor-pointer rounded-md {channel.id == getCurrentChannelId()
-										? 'border border-blue-400 hover:border-blue-500'
-										: ''} bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
-									onclick={refreshChat}
-									href="?{new URLSearchParams({ c: channel.id }).toString()}">
-									{channel.name}
-								</a>
+								<input
+									type="file"
+									class="hidden"
+									accept="image/png, image/jpeg, image/webp"
+									onchange={onAvatarUploadStart}
+									bind:this={avatarFilePicker} />
+								{#if currentAvatarPath}
+									<button
+										class="w-full cursor-pointer rounded-md bg-red-500 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-red-600"
+										onclick={removeAvatar}>
+										<div class="flex flex-row justify-center gap-2">
+											<img src="/assets/trash.svg" alt="trash" />
+											<p>Remove</p>
+										</div>
+									</button>
+								{/if}
 							</div>
-						{/each}
-						<div class="mt-2 flex w-full flex-row gap-4">
-							<button
-								class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
-								onclick={onCreateChannelOpen}>
-								<div class="flex flex-row justify-center gap-2">
-									<img src="/assets/add.svg" alt="add" />
-									<p>Create Channel</p>
-								</div>
-							</button>
-							<button
-								class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
-								onclick={() => (listChannelsPopupShown = true)}>
-								<div class="flex flex-row justify-center gap-2">
-									<img src="/assets/list.svg" alt="add" />
-									<p>List Channels</p>
-								</div>
-							</button>
 						</div>
-					</div>
-				{/if}
+					{/if}
+				</div>
+				<div
+					class="flex flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
+					<button
+						onclick={() => (channelsMenuOpen = !channelsMenuOpen)}
+						class="flex w-full cursor-pointer flex-row items-center justify-between">
+						<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Channels</h1>
+						<img src="/assets/chevron_forward.svg" alt="open menu" />
+					</button>
+					{#if channelsMenuOpen}
+						<div class="flex flex-col gap-2" transition:slide={{ axis: 'y', duration: 200 }}>
+							{#each savedChannels as channel}
+								<div class="flex flex-row items-center gap-4">
+									<img
+										src="/assets/tag.svg"
+										class="size-6 brightness-0 dark:brightness-100"
+										alt="chevron" />
+									<a
+										class="w-full cursor-pointer rounded-md {channel.id == getCurrentChannelId()
+											? 'border border-blue-400 hover:border-blue-500'
+											: ''} bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
+										onclick={refreshChat}
+										href="?{new URLSearchParams({ c: channel.id }).toString()}">
+										{channel.name}
+									</a>
+								</div>
+							{/each}
+							<div class="mt-2 flex w-full flex-row gap-4">
+								<button
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
+									onclick={onCreateChannelOpen}>
+									<div class="flex flex-row justify-center gap-2">
+										<img src="/assets/add.svg" alt="add" />
+										<p>Create Channel</p>
+									</div>
+								</button>
+								<button
+									class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
+									onclick={() => (listChannelsPopupShown = true)}>
+									<div class="flex flex-row justify-center gap-2">
+										<img src="/assets/list.svg" alt="add" />
+										<p>List Channels</p>
+									</div>
+								</button>
+							</div>
+						</div>
+					{/if}
+				</div>
 			</div>
-		</div>
-	</section>
+		</section>
+	</div>
 {:else}
 	<button
 		class="fixed top-8 right-8 flex flex-row gap-1 self-end rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500"
