@@ -12,17 +12,19 @@
 	import Popup from './Popup.svelte';
 	import PasswordPrompt from './PasswordPrompt.svelte';
 
-	let savedChannels: Channel[] = $state(getSavedChannels());
+	let savedChannels: Channel[] = $state([]);
 
 	let allChannels: Channel[] = $state([]);
 	let passwordPromptShown: boolean = $state(false);
 	let onPasswordSubmit: ((pass: string) => void) | null = $state(null);
 	let promptPass: string = $state('');
 	let sortedChannelsList = $derived(sortedChannels());
+	let awaitedSavedChannels: Channel[];
 
 	let { onClose, onListChanged } = $props();
 
 	onMount(async () => {
+		savedChannels = await getSavedChannels();
 		const res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID);
 		res.documents.forEach((d) =>
 			allChannels.push(new Channel(d.$id, d.name, new Date(d.expiration), d.password, null)),
@@ -38,7 +40,7 @@
 		if (channel.id == env.PUBLIC_MAIN_CHANNEL_ID) {
 			return alert("Can't remove Main channel");
 		}
-		if (isChannelSaved(channel)) {
+		if (await isChannelSaved(channel)) {
 			unsaveChannel(channel);
 			// if (currentChannelId == channel.id) {
 			// 	refreshChat();
@@ -59,7 +61,7 @@
 					const allowed = resText == 'true';
 					if (allowed) {
 						channel.savedPassword = promptPass;
-						saveChannel(channel);
+						await saveChannel(channel);
 						saveSaveSavedSave();
 					}
 				};
@@ -69,14 +71,14 @@
 				};
 			} else {
 				// savedChannels.push(channel);
-				saveChannel(channel);
+				await saveChannel(channel);
 			}
 		}
 		saveSaveSavedSave();
 	}
 
-	function saveSaveSavedSave() {
-		savedChannels = getSavedChannels();
+	async function saveSaveSavedSave() {
+		savedChannels = await getSavedChannels();
 		onListChanged();
 	}
 </script>
@@ -89,8 +91,8 @@
 	<div class="flex flex-row flex-wrap gap-4">
 		{#each sortedChannelsList as channel}
 			<button
-				class="cursor-pointer rounded-md border bg-slate-300/10 px-4 py-2 shadow-md transition dark:text-white {getSavedChannels()
-					.map((c) => c.id)
+				class="cursor-pointer rounded-md border bg-slate-300/10 px-4 py-2 shadow-md transition dark:text-white {savedChannels
+					.map((c: Channel) => c.id)
 					.includes(channel.id)
 					? 'border-blue-500'
 					: 'border-stone-500'}"

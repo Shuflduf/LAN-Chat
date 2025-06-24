@@ -1,6 +1,6 @@
 import { page } from '$app/state';
 import { env } from '$env/dynamic/public';
-import { Avatars, Client, Databases, Query, Storage } from 'appwrite';
+import { Avatars, Client, Databases, ID, Query, Storage } from 'appwrite';
 
 export const client = new Client()
   .setEndpoint(env.PUBLIC_APPWRITE_ENDPOINT)
@@ -142,21 +142,23 @@ export class Message {
   }
 }
 
-export function channelFromId(id: string): Channel | undefined {
+export async function channelFromId(id: string): Promise<Channel | undefined> {
   const ls = safeLocalStorage();
   if (!ls) return;
   const channels = ls.getItem('saved_channels');
   if (channels == null) {
-    ls.setItem('saved_channels', JSON.stringify([mainChannel()]));
+    ls.setItem('saved_channels', JSON.stringify(await defaultChannels()));
+
     return mainChannel();
   } else {
     const allSavedChannels = JSON.parse(channels);
+
     return allSavedChannels.find((c: Channel) => c.id == id);
   }
 }
 
 export function mainChannel(): Channel {
-  return new Channel(env.PUBLIC_MAIN_CHANNEL_ID, 'Main', null, null, null);
+  return new Channel(env.PUBLIC_MAIN_CHANNEL_ID, 'Main', null, null, null)
 }
 
 export function formatDate(date: Date): string {
@@ -191,8 +193,8 @@ export function getUsername(): string {
   return username ? username : '';
 }
 
-export function getCurrentChannel(): Channel | undefined {
-  const res = channelFromId(getCurrentChannelId());
+export async function getCurrentChannel(): Promise<Channel | undefined> {
+  const res = await channelFromId(getCurrentChannelId());
   return res;
 }
 
@@ -222,24 +224,24 @@ export function getAvatarId(): string | null {
   return avatarId;
 }
 
-export function getSavedChannels(): Channel[] {
+export async function getSavedChannels(): Promise<Channel[]> {
   const ls = safeLocalStorage();
-  if (!ls) return [mainChannel()];
+  if (!ls) return defaultChannels();
   const channels = ls.getItem('saved_channels');
   if (channels) {
     return JSON.parse(channels);
   }
-  return [mainChannel()];
+  return await defaultChannels();
 }
-export function isChannelSaved(channel: Channel): boolean {
-  const savedChannels = getSavedChannels();
-  const saved = savedChannels.map((c) => c.id).includes(channel.id);
+export async function isChannelSaved(channel: Channel): Promise<boolean> {
+  const savedChannels = await getSavedChannels();
+  const saved = savedChannels.map((c: Channel) => c.id).includes(channel.id);
   return saved;
 }
 
-export function saveChannel(channel: Channel) {
+export async function saveChannel(channel: Channel) {
   const prevChannels = localStorage.getItem('saved_channels');
-  let newChannels = [mainChannel()];
+  let newChannels = await defaultChannels();
   if (prevChannels) {
     newChannels = JSON.parse(prevChannels);
   }
@@ -256,10 +258,45 @@ export function safeLocalStorage(): globalThis.Storage | undefined {
 
 export async function getAllChannels(): Promise<Channel[]> {
   const res = await databases.listDocuments("main", env.PUBLIC_CHANNELS_ID)
-  return res.documents.map((d) => new Channel(
-    d.$id,
-    d.name,
-    d.expiration,
-    d.password,
-  ))
+  return res.documents
+    .filter((d) => !d.name.startsWith("Net"))
+    .map((d) => new Channel(
+      d.$id,
+      d.name,
+      d.expiration,
+      d.password,
+    ))
+}
+
+export async function defaultChannels(): Promise<Channel[]> {
+  return [mainChannel(), await getNetworkChannel()]
+}
+
+export async function getNetworkChannel(): Promise<Channel> {
+  const ip = await getPublicIp()
+  const targetName = `Net ${ip}`
+  const res = await databases.listDocuments("main", env.PUBLIC_CHANNELS_ID, [
+    Query.equal("name", targetName),
+    Query.limit(1)
+  ])
+  const channelExists = res.total > 0
+  if (channelExists) {
+    const channel = res.documents[0]
+    console.log("exists:", channel);
+
+    return new Channel(channel.$id, channel.name, new Date(2035, 0));
+  }
+
+  const createRes = await databases.createDocument("main", env.PUBLIC_CHANNELS_ID, ID.unique(), {
+    name: targetName,
+    expiration: new Date(2035, 0),
+  })
+
+  return new Channel(createRes.$id, createRes.name, new Date(2035, 0))
+}
+
+export async function getPublicIp(): Promise<string> {
+  const res = await fetch("https://api.ipify.org?format=json")
+  const data = await res.json()
+  return data.ip
 }
