@@ -3,6 +3,7 @@
 	import {
 		Channel,
 		databases,
+		getAllChannels,
 		getSavedChannels,
 		isChannelSaved,
 		saveChannel,
@@ -19,16 +20,12 @@
 	let onPasswordSubmit: ((pass: string) => void) | null = $state(null);
 	let promptPass: string = $state('');
 	let sortedChannelsList = $derived(sortedChannels());
-	let awaitedSavedChannels: Channel[];
 
 	let { onClose, onListChanged } = $props();
 
 	onMount(async () => {
 		savedChannels = await getSavedChannels();
-		const res = await databases.listDocuments('main', env.PUBLIC_CHANNELS_ID);
-		res.documents.forEach((d) =>
-			allChannels.push(new Channel(d.$id, d.name, new Date(d.expiration), d.password, null)),
-		);
+		allChannels = await getAllChannels();
 	});
 
 	function sortedChannels(): Channel[] {
