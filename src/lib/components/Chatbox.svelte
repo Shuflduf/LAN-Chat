@@ -54,7 +54,8 @@
 		messages.unshift(mes);
 	}
 
-	function addTempMessage(mes: Message) {
+	async function addTempMessage(mes: Message) {
+		await mes.renderMarkdown();
 		messages.unshift(mes);
 	}
 
