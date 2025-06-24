@@ -3,7 +3,6 @@
 	import {
 		databases,
 		getAvatarId,
-		getCurrentChannel,
 		getCurrentChannelId,
 		getUsername,
 		Message,
@@ -14,7 +13,7 @@
 	import { onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 
-	let newMessageBox: HTMLInputElement | null = $state(null);
+	let newMessageBox: HTMLTextAreaElement | null = $state(null);
 	let messageFilePicker: HTMLInputElement | null = $state(null);
 	let newMessage: string = $state('');
 	let currentAvatarId: string | null = $state(null);
@@ -134,6 +133,12 @@
 		});
 		// messages = messages.filter((m) => m.type != MessageType.Temp || m.id != tempMessage.id);
 	}
+	function handleTextareaKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			submitMessage(event);
+		}
+	}
 </script>
 
 <div class="absolute bottom-22 left-4 flex flex-row gap-2">
@@ -158,10 +163,13 @@
 		onclick={() => messageFilePicker?.click()}>
 		<img src="/assets/add.svg" alt="plus" class="brightness-0 dark:brightness-100" />
 	</button>
-	<input
+	<textarea
+		rows="1"
 		onpaste={pasteMessageFiles}
+		onkeydown={handleTextareaKeydown}
 		class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition hover:shadow-lg focus:shadow-xl focus:outline-none dark:text-white"
 		placeholder="Send message to {currentChannelName}"
 		bind:value={newMessage}
-		bind:this={newMessageBox} />
+		bind:this={newMessageBox}>
+	</textarea>
 </form>

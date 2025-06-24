@@ -145,7 +145,9 @@ export class Message {
   }
 
   async renderMarkdown() {
-    const dirty = await marked(this.content);
+    const dirty = await marked(this.content, {
+
+    });
     const clean = DOMPurify.sanitize(dirty);
     this.renderedMarkdown = clean
   }
