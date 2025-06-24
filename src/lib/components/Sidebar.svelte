@@ -30,7 +30,7 @@
 	let channelsMenuOpen: boolean = $state(true);
 	let username: string = $state(getUsername());
 	let currentAvatarPath: string | null = $state(
-		getAvatarId ? formatAvatarURI(getAvatarId() as string) : null,
+		getAvatarId() ? formatAvatarURI(getAvatarId() as string) : null,
 	);
 	let allChannels: Channel[] = $state([]);
 	let savedChannels: Channel[] = $state(getSavedChannels());

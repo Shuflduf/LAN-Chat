@@ -18,7 +18,7 @@
 	import type { Models, RealtimeResponseEvent } from 'appwrite';
 	import { onMount } from 'svelte';
 	import MessageInput from './MessageInput.svelte';
-	import type { Writable } from 'svelte/store';
+	import { writable, type Writable } from 'svelte/store';
 
 	let { update }: { update: Writable<string> } = $props();
 
@@ -27,6 +27,7 @@
 	let messages: Message[] = $state([]);
 	let loadingMessages: boolean = $state(false);
 	let messageGroups: any[] = $derived(groupsFromMessages(messages));
+	let droppedFiles: Writable<File[]> = $state(writable([]));
 
 	onMount(async () => {
 		client.subscribe(
@@ -192,10 +193,19 @@
 		messages = [...messages, ...newMessages];
 		loadingMessages = false;
 	}
+
+	function messageFilesDropped(event: DragEvent) {
+		event.preventDefault();
+		if (!event.dataTransfer) {
+			return;
+		}
+		const files = Array.from(event.dataTransfer.files);
+		droppedFiles.set(files);
+	}
 </script>
 
-<!-- ondrop={messageFilesDropped} -->
 <div
+	ondrop={messageFilesDropped}
 	role="region"
 	ondragover={(e) => e.preventDefault()}
 	class="flex w-full max-w-4xl flex-col rounded-md border border-slate-500 bg-slate-300/10 shadow-md
@@ -277,5 +287,5 @@
 		{/each}
 	</div>
 	<!-- // message input -->
-	<MessageInput></MessageInput>
+	<MessageInput {droppedFiles}></MessageInput>
 </div>

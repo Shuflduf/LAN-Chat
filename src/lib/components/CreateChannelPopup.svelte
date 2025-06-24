@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Models } from 'appwrite';
 	import Popup from './Popup.svelte';
+	import { getAllChannels } from '$lib';
 
 	let channelCreationName: string = $state('');
 	let channelCreationPassword: string = $state('');
@@ -15,6 +16,12 @@
 		}
 		if (channelCreationExpiration == '') {
 			alert('Please provide an expiration date');
+			return;
+		}
+
+		const allChannels = await getAllChannels();
+		if (allChannels.map((c) => c.name).includes(channelCreationName)) {
+			alert('Channel name taken');
 			return;
 		}
 

@@ -12,6 +12,7 @@
 	} from '$lib';
 	import { ID } from 'appwrite';
 	import { onMount } from 'svelte';
+	import type { Writable } from 'svelte/store';
 
 	let newMessageBox: HTMLInputElement | null = $state(null);
 	let messageFilePicker: HTMLInputElement | null = $state(null);
@@ -19,12 +20,28 @@
 	let currentAvatarId: string | null = $state(null);
 	let messageFiles: File[] = $state([]);
 
+	let { droppedFiles }: { droppedFiles: Writable<File[]> } = $props();
+
 	onMount(() => {
 		const avatarId = localStorage.getItem('avatarId');
 		if (avatarId != null) {
 			currentAvatarId = avatarId;
 		}
+		droppedFiles.subscribe(droppedFilesUpdate);
 	});
+
+	function droppedFilesUpdate(files: File[]) {
+		if (files.length > 0) {
+			if (files.length + messageFiles.length > 5) {
+				alert('5 files max');
+				return;
+			}
+			for (const file of files) {
+				messageFiles.push(file);
+			}
+		}
+	}
+
 	function removeMessageFile(file: File) {
 		messageFiles = messageFiles.filter((f) => f != file);
 	}

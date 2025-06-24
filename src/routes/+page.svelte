@@ -8,23 +8,6 @@
 	// function toggleTheme() {
 	// 	document.documentElement.classList.toggle('dark');
 	// }
-
-	// function messageFilesDropped(event: DragEvent) {
-	// 	event.preventDefault();
-	// 	if (!event.dataTransfer) {
-	// 		return;
-	// 	}
-	// 	const files = Array.from(event.dataTransfer.files);
-	// 	if (files.length > 0) {
-	// 		if (files.length + messageFiles.length > 5) {
-	// 			alert('5 files max');
-	// 			return;
-	// 		}
-	// 		for (const file of files) {
-	// 			messageFiles.push(file);
-	// 		}
-	// 	}
-	// }
 </script>
 
 <!-- PAGE -->
