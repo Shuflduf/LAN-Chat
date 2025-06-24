@@ -24,7 +24,7 @@
 	let { update }: { update: Writable<string> } = $props();
 
 	let avatarFilePicker: HTMLInputElement | null = $state(null);
-	let sidebarShown: boolean = $state(true);
+	let sidebarShown: boolean = $state(false);
 	let createChannelPopupShown: boolean = $state(false);
 	let profileCustomizationOpen: boolean = $state(true);
 	let channelsMenuOpen: boolean = $state(true);
