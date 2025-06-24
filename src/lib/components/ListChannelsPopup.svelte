@@ -102,7 +102,10 @@
 				onclick={() => toggleChannel(channel)}>
 				<div class="flex flex-row gap-2">
 					{#if channel.password}
-						<img src="/assets/key.svg" alt="password protected channel" />
+						<img
+							src="/assets/key.svg"
+							alt="password protected channel"
+							class="brightness-0 dark:brightness-100" />
 					{/if}
 					<p>{channel.name}</p>
 				</div>

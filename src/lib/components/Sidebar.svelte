@@ -132,7 +132,7 @@
 		class="sidebar-min fixed right-4 ml-4 h-[calc(100%-2rem)] max-w-md md:static md:m-0 md:ml-0 md:h-full md:min-w-md">
 		<section
 			transition:fly={{ duration: 200, x: 100, easing: quadOut }}
-			class="flex h-full w-full flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xl md:backdrop-blur-xs">
+			class="bg-funny flex h-full w-full flex-col gap-4 rounded-md border border-slate-500 bg-white p-4 shadow-md backdrop-blur-lg md:backdrop-blur-xs dark:bg-slate-300/10">
 			<div class="flex w-full flex-row justify-end gap-4">
 				<!-- <button -->
 				<!-- 	class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500" -->
@@ -152,7 +152,10 @@
 						onclick={() => (profileCustomizationOpen = !profileCustomizationOpen)}
 						class="flex w-full cursor-pointer flex-row items-center justify-between">
 						<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Profile</h1>
-						<img src="/assets/chevron_forward.svg" alt="open menu" />
+						<img
+							src="/assets/chevron_forward.svg"
+							alt="open menu"
+							class="brightness-0 dark:brightness-100" />
 					</button>
 					{#if profileCustomizationOpen}
 						<div class="flex flex-col gap-4" transition:slide={{ axis: 'y', duration: 200 }}>
@@ -205,7 +208,10 @@
 						onclick={() => (channelsMenuOpen = !channelsMenuOpen)}
 						class="flex w-full cursor-pointer flex-row items-center justify-between">
 						<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Channels</h1>
-						<img src="/assets/chevron_forward.svg" alt="open menu" />
+						<img
+							src="/assets/chevron_forward.svg"
+							alt="open menu"
+							class="brightness-0 dark:brightness-100" />
 					</button>
 					{#if channelsMenuOpen}
 						<div class="flex flex-col gap-2" transition:slide={{ axis: 'y', duration: 200 }}>
@@ -218,7 +224,7 @@
 									<a
 										class="w-full cursor-pointer rounded-md {channel.id == getCurrentChannelId()
 											? 'border border-blue-400 hover:border-blue-500'
-											: ''} bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
+											: 'border border-slate-300 dark:border-none'} bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
 										onclick={refreshChat}
 										href="?{new URLSearchParams({ c: channel.id }).toString()}">
 										{channel.name}

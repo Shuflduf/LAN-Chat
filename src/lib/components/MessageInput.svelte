@@ -150,7 +150,7 @@
 		type="button"
 		class="rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md"
 		onclick={() => messageFilePicker?.click()}>
-		<img src="/assets/add.svg" alt="plus" />
+		<img src="/assets/add.svg" alt="plus" class="brightness-0 dark:brightness-100" />
 	</button>
 	<input
 		onpaste={pasteMessageFiles}
