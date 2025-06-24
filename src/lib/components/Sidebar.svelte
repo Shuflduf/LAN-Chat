@@ -129,7 +129,7 @@
 
 {#if sidebarShown}
 	<div
-		class="min-w-[min(100%, 768px)] fixed right-4 ml-4 h-[calc(100%-2rem)] md:static md:m-0 md:ml-0 md:h-full md:min-w-md">
+		class="sidebar-min fixed right-4 ml-4 h-[calc(100%-2rem)] max-w-md md:static md:m-0 md:ml-0 md:h-full md:min-w-md">
 		<section
 			transition:fly={{ duration: 200, x: 100, easing: quadOut }}
 			class="flex h-full w-full flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xl md:backdrop-blur-xs">
@@ -256,3 +256,9 @@
 		<img src="/assets/chevron_forward.svg" class="rotate-180" alt="open sidebar" />
 	</button>
 {/if}
+
+<style>
+	.sidebar-min {
+		min-width: min(calc(100vw - 2rem), 28rem);
+	}
+</style>

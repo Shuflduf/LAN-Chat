@@ -5,7 +5,7 @@
 	let { children, title, onClose } = $props();
 </script>
 
-<PopupBackground className="z-30" {onClose}>
+<PopupBackground className="z-30 px-4" {onClose}>
 	<div
 		class="bg-funny h-4/5 w-3xl rounded-md border border-slate-500 bg-white p-4 shadow-md backdrop-blur-lg dark:bg-slate-300/10"
 		transition:fly={{ y: -50, duration: 100 }}>
