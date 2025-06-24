@@ -129,7 +129,7 @@
 {#if sidebarShown}
 	<section
 		transition:fly={{ duration: 200, x: 100, easing: quadOut }}
-		class="flex h-full w-lg flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xs">
+		class="fixed flex h-full flex-col gap-4 rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md backdrop-blur-xl md:static md:w-lg md:backdrop-blur-xs">
 		<div class="flex w-full flex-row justify-end gap-4">
 			<!-- <button -->
 			<!-- 	class="flex flex-row gap-1 rounded-md bg-blue-400 px-4 py-2 text-white shadow-md transition hover:bg-blue-500" -->
