@@ -2,7 +2,7 @@
 
 A modern, real-time chat application built with Svelte and TypeScript.
 
-![Shufl-Chat Logo](.static/assets/shuflduf_logo.png)
+![shuflduf_logo](https://github.com/user-attachments/assets/3dd77a0f-3054-4019-bdb4-70279ee562d5)
 
 ## Features
 
