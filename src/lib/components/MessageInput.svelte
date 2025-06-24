@@ -167,7 +167,7 @@
 		rows="1"
 		onpaste={pasteMessageFiles}
 		onkeydown={handleTextareaKeydown}
-		class="w-full rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition hover:shadow-lg focus:shadow-xl focus:outline-none dark:text-white"
+		class="w-full resize-none rounded-md border border-slate-500 bg-slate-300/10 p-4 shadow-md transition hover:shadow-lg focus:shadow-xl focus:outline-none dark:text-white"
 		placeholder="Send message to {currentChannelName}"
 		bind:value={newMessage}
 		bind:this={newMessageBox}>
