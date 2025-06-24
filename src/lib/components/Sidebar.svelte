@@ -5,11 +5,13 @@
 		databases,
 		formatAvatarURI,
 		getAvatarId,
+		getCurrentChannel,
 		getCurrentChannelId,
 		getSavedChannels,
 		getUsername,
 		saveChannel,
 		storage,
+		unsaveChannel,
 	} from '$lib';
 	import { ID, type Models } from 'appwrite';
 	import { fly, slide } from 'svelte/transition';
@@ -17,6 +19,7 @@
 	import { quadOut } from 'svelte/easing';
 	import CreateChannelPopup from './CreateChannelPopup.svelte';
 	import type { Writable } from 'svelte/store';
+	import { onMount } from 'svelte';
 
 	let { update }: { update: Writable<string> } = $props();
 
@@ -26,7 +29,9 @@
 	let profileCustomizationOpen: boolean = $state(true);
 	let channelsMenuOpen: boolean = $state(true);
 	let username: string = $state(getUsername());
-	let currentAvatarPath: string | null = $state(null);
+	let currentAvatarPath: string | null = $state(
+		getAvatarId ? formatAvatarURI(getAvatarId() as string) : null,
+	);
 	let allChannels: Channel[] = $state([]);
 	let savedChannels: Channel[] = $state(getSavedChannels());
 
@@ -34,6 +39,30 @@
 
 	function saveUsername() {
 		localStorage.setItem('username', username);
+	}
+
+	onMount(() => {
+		refreshChat();
+	});
+
+	async function handleSelfDestruct() {
+		// this is probably a bad idea
+		const curChannel = getCurrentChannel();
+		if (curChannel?.name == 'Main') return;
+
+		const expiration = curChannel?.expiration;
+		if (!expiration) return;
+
+		const expirationDate = new Date(expiration);
+		if (expirationDate.getTime() < Date.now()) {
+			alert('Channel deleted');
+			// savedChannels = savedChannels.filter((c) => c.id != currentChannelId);
+			unsaveChannel(getCurrentChannel() as Channel);
+			await databases.deleteDocument('main', env.PUBLIC_CHANNELS_ID, getCurrentChannelId());
+			// currentChannelId = env.PUBLIC_MAIN_CHANNEL_ID;
+			window.location.replace('/');
+			refreshChat();
+		}
 	}
 
 	async function onAvatarUploadStart() {
@@ -53,6 +82,7 @@
 
 	async function refreshChat() {
 		await new Promise((r) => setTimeout(r, 100));
+		handleSelfDestruct();
 		update.set(getCurrentChannelId());
 	}
 
@@ -63,6 +93,7 @@
 		const channel = new Channel(doc.$id, doc.name, doc.expiration, doc.password, pass);
 		// savedChannels.push(channel);
 		saveChannel(channel);
+		savedChannels = getSavedChannels();
 	}
 
 	async function getAllChannels() {

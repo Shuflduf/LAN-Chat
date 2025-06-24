@@ -243,8 +243,11 @@
 												title={file.id}
 												class="max-w-64" />
 										{:else if file.isVideo()}
-											<video src={file.formatURL()} title={file.id} controls class="max-w-96"
-												><track kind="captions" /></video>
+											<video
+												src={file.formatURL()}
+												title={file.id}
+												controls
+												class="max-w-96 rounded-md"><track kind="captions" /></video>
 										{/if}
 									{/each}
 									{#if message.mediaFiles().length > 0 && message.notMediaFiles().length > 0}

@@ -9,23 +9,6 @@
 	// 	document.documentElement.classList.toggle('dark');
 	// }
 
-	// async function handleSelfDestruct() {
-	// 	// this is probably a bad idea
-	// 	const expiration = getCurrentChannel()?.expiration;
-	// 	if (!expiration) {
-	// 		return;
-	// 	}
-	// 	const expirationDate = new Date(expiration);
-	// 	if (expirationDate.getTime() < Date.now()) {
-	// 		alert('Channel deleted');
-	// 		savedChannels = savedChannels.filter((c) => c.id != currentChannelId);
-	// 		saveSavedChannels();
-	// 		await databases.deleteDocument('main', env.PUBLIC_CHANNELS_ID, currentChannelId);
-	// 		currentChannelId = env.PUBLIC_MAIN_CHANNEL_ID;
-	// 		refreshChat();
-	// 	}
-	// }
-
 	// function messageFilesDropped(event: DragEvent) {
 	// 	event.preventDefault();
 	// 	if (!event.dataTransfer) {

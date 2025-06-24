@@ -159,10 +159,6 @@ export function mainChannel(): Channel {
   return new Channel(env.PUBLIC_MAIN_CHANNEL_ID, 'Main', null, null, null);
 }
 
-// export function getCurrentChannel(): Channel | undefined {
-//   const channel = savedChannels.find((c) => c.id == currentChannelId);
-//   return channel;
-// }
 export function formatDate(date: Date): string {
   const hours = date.getHours();
   const hour12 = hours % 12 || 12;
@@ -198,6 +194,16 @@ export function getUsername(): string {
 export function getCurrentChannel(): Channel | undefined {
   const res = channelFromId(getCurrentChannelId())
   return res
+}
+
+export function unsaveChannel(channel: Channel) {
+  const prevChannels = localStorage.getItem('saved_channels');
+  if (prevChannels) {
+    let newChannels: Channel[] = JSON.parse(prevChannels);
+    const targetIndex = newChannels.map((c) => c.id).indexOf(channel.id);
+    newChannels.splice(targetIndex, 1);
+    localStorage.setItem('saved_channels', JSON.stringify(newChannels));
+  }
 }
 
 export function getChannelPassword(id: string): string {

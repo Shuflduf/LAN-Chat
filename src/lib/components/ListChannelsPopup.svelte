@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { env } from '$env/dynamic/public';
-	import { Channel, databases, getSavedChannels, isChannelSaved, saveChannel } from '$lib';
+	import {
+		Channel,
+		databases,
+		getSavedChannels,
+		isChannelSaved,
+		saveChannel,
+		unsaveChannel,
+	} from '$lib';
 	import { onMount } from 'svelte';
 	import Popup from './Popup.svelte';
 	import PasswordPrompt from './PasswordPrompt.svelte';
@@ -71,16 +78,6 @@
 	function saveSaveSavedSave() {
 		savedChannels = getSavedChannels();
 		onListChanged();
-	}
-
-	function unsaveChannel(channel: Channel) {
-		const prevChannels = localStorage.getItem('saved_channels');
-		if (prevChannels) {
-			let newChannels: Channel[] = JSON.parse(prevChannels);
-			const targetIndex = newChannels.map((c) => c.id).indexOf(channel.id);
-			newChannels.splice(targetIndex, 1);
-			localStorage.setItem('saved_channels', JSON.stringify(newChannels));
-		}
 	}
 </script>
 
