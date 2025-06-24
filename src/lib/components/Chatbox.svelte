@@ -230,7 +230,7 @@
 	ondrop={messageFilesDropped}
 	role="region"
 	ondragover={(e) => e.preventDefault()}
-	class="mb-8 flex w-full max-w-4xl flex-col rounded-md border border-slate-500 bg-slate-300/10
+	class="mb-8 flex w-full max-w-2xl flex-col rounded-md border border-slate-500 bg-slate-300/10
 	shadow-md backdrop-blur-xs transition hover:shadow-lg md:mb-0">
 	<div
 		class="flex h-full flex-col-reverse overflow-y-auto p-2"
