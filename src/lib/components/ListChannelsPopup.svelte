@@ -82,8 +82,8 @@
 </script>
 
 {#if passwordPromptShown}
-	<PasswordPrompt onClose={() => (passwordPromptShown = false)} onSubmit={onPasswordSubmit}
-	></PasswordPrompt>
+	<PasswordPrompt onClose={() => (passwordPromptShown = false)} onSubmit={onPasswordSubmit}>
+	</PasswordPrompt>
 {/if}
 <Popup title="List Channels" {onClose}>
 	<div class="flex flex-row flex-wrap gap-4">
@@ -94,11 +94,14 @@
 					.includes(channel.id)
 					? 'border-blue-500'
 					: 'border-stone-500'}"
-				onclick={() => toggleChannel(channel)}
-				><div class="flex flex-row gap-2">
-					{#if channel.password}<img src="/assets/key.svg" alt="password protected channel" />{/if}
+				onclick={() => toggleChannel(channel)}>
+				<div class="flex flex-row gap-2">
+					{#if channel.password}
+						<img src="/assets/key.svg" alt="password protected channel" />
+					{/if}
 					<p>{channel.name}</p>
-				</div></button>
+				</div>
+			</button>
 		{/each}
 	</div>
 </Popup>

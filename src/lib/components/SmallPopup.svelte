@@ -11,8 +11,8 @@
 		transition:fly={{ y: -50, duration: 100 }}>
 		<div class="flex w-full flex-row items-start justify-between">
 			<h1 class="mb-4 text-2xl dark:text-white">{title}</h1>
-			<button onclick={onClose} class="cursor-pointer"
-				><img src="/assets/close.svg" alt="close" /></button>
+			<button onclick={onClose} class="cursor-pointer">
+				<img src="/assets/close.svg" alt="close" /></button>
 		</div>
 		{@render children()}
 	</div>

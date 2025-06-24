@@ -2,7 +2,6 @@
 	import { env } from '$env/dynamic/public';
 	import {
 		avatars,
-		channelFromId,
 		client,
 		formatAvatarURI,
 		formatBytes,

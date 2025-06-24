@@ -117,9 +117,8 @@
 </script>
 
 {#if listChannelsPopupShown}
-	<!-- TODO: add callback functions -->
-	<ListChannelsPopup onClose={() => (listChannelsPopupShown = false)} {onListChanged}
-	></ListChannelsPopup>
+	<ListChannelsPopup onClose={() => (listChannelsPopupShown = false)} {onListChanged}>
+	</ListChannelsPopup>
 {/if}
 {#if createChannelPopupShown}
 	<CreateChannelPopup onClose={() => (createChannelPopupShown = false)} {onChannelCreate}>
@@ -136,8 +135,8 @@
 			<!-- > -->
 			<button
 				class="flex cursor-pointer flex-row gap-2 rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
-				onclick={toggleSidebar}
-				><p>Hide Sidebar</p>
+				onclick={toggleSidebar}>
+				<p>Hide Sidebar</p>
 				<img src="/assets/chevron_forward.svg" alt="chevron" />
 			</button>
 		</div>
@@ -150,7 +149,6 @@
 					<h1 class="font-[Arvo] text-2xl font-bold dark:text-white">Profile</h1>
 					<img src="/assets/chevron_forward.svg" alt="open menu" />
 				</button>
-				<!-- TODO: add toggle thing -->
 				{#if profileCustomizationOpen}
 					<div class="flex flex-col gap-4" transition:slide={{ axis: 'y', duration: 200 }}>
 						<div class="flex h-12 w-full flex-row gap-2">
@@ -172,7 +170,8 @@
 								class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-blue-500"
 								onclick={() => avatarFilePicker?.click()}>
 								<div class="flex flex-row justify-center gap-2">
-									<img src="/assets/person.svg" alt="person" />Upload Avatar
+									<img src="/assets/person.svg" alt="person" />
+									<p>Upload Avatar</p>
 								</div>
 							</button>
 							<input
@@ -184,10 +183,12 @@
 							{#if currentAvatarPath}
 								<button
 									class="w-full cursor-pointer rounded-md bg-red-500 px-4 py-2 font-[Arvo] text-white shadow-md transition hover:bg-red-600"
-									onclick={removeAvatar}
-									><div class="flex flex-row justify-center gap-2">
-										<img src="/assets/trash.svg" alt="trash" />Remove
-									</div></button>
+									onclick={removeAvatar}>
+									<div class="flex flex-row justify-center gap-2">
+										<img src="/assets/trash.svg" alt="trash" />
+										<p>Remove</p>
+									</div>
+								</button>
 							{/if}
 						</div>
 					</div>
@@ -215,23 +216,28 @@
 										? 'border border-blue-400 hover:border-blue-500'
 										: ''} bg-slate-300/10 px-4 py-2 transition hover:bg-slate-400/10 dark:text-white"
 									onclick={() => refreshChat()}
-									href="?{new URLSearchParams({ c: channel.id }).toString()}">{channel.name}</a>
+									href="?{new URLSearchParams({ c: channel.id }).toString()}">
+									{channel.name}
+								</a>
 							</div>
 						{/each}
 						<div class="mt-2 flex w-full flex-row gap-4">
 							<button
 								class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
-								onclick={onCreateChannelOpen}
-								><div class="flex flex-row justify-center gap-2">
-									<img src="/assets/add.svg" alt="add" />Create Channel
+								onclick={onCreateChannelOpen}>
+								<div class="flex flex-row justify-center gap-2">
+									<img src="/assets/add.svg" alt="add" />
+									<p>Create Channel</p>
 								</div>
 							</button>
 							<button
 								class="w-full cursor-pointer rounded-md bg-blue-400 px-4 py-2 font-[Arvo] text-white shadow-md backdrop-blur-xs transition hover:bg-blue-500"
-								onclick={() => (listChannelsPopupShown = true)}
-								><div class="flex flex-row justify-center gap-2">
-									<img src="/assets/list.svg" alt="add" />List Channels
-								</div></button>
+								onclick={() => (listChannelsPopupShown = true)}>
+								<div class="flex flex-row justify-center gap-2">
+									<img src="/assets/list.svg" alt="add" />
+									<p>List Channels</p>
+								</div>
+							</button>
 						</div>
 					</div>
 				{/if}
